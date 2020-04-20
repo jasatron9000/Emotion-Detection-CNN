@@ -15,26 +15,29 @@ import matplotlib.pyplot as plt
 #   -average            -> the amount of iterations it will go through the graph and averages it
 #   -x and y            -> pre-defined x and y data
 class genLinePlot:
-    def __init__(self, colour="", title="", xlabel="", ylabel="", average=1, x=None, y=None):
+    def __init__(self, colour="blue", title="", xlabel="", ylabel="", average=1, x=None, y=None):
         if y is None:
             self.y = []
+        else:
+            self.y = y
+
         if x is None:
             self.x = []
+        else:
+            self.x = x
         self.colour = colour
         self.title = title
         self.xlabel = xlabel
         self.ylabel = ylabel
-        self.average = 1
-        self.x = x
-        self.y = y
+        self.average = average
 
 
 # insertY : this allows the user to just append the y axis
 # PARAMS:
 #   -plotArray  -> which plot class will be used
 #   -y          -> what the data that will be appended
-def insertY(plotArray: genLinePlot, y):
-    plotArray.y.append(y)
+def insertY(plotArray: genLinePlot, ny):
+    plotArray.y.append(ny)
     plotArray.x.append(len(plotArray.y))
 
 
@@ -42,13 +45,11 @@ def insertY(plotArray: genLinePlot, y):
 # PARAMS:
 #   -plotArray  -> which plot class will be used
 #   -y and x    -> what the data that will be appended
-def insertDim(plotArray: genLinePlot, y, x):
-    plotArray.y.append(y)
-    plotArray.x.append(x)
+def insertDim(plotArray: genLinePlot, ny, nx):
+    plotArray.y.append(ny)
+    plotArray.x.append(nx)
 
 
-# TODO: Finish the showPlot -> the only thing left for this is that we need to pass the information in
-#       the class to the show plot so that it can display the other information it has
 def showPlot(*plots: genLinePlot):
     # create figure
     fig = plt.figure()
@@ -59,15 +60,18 @@ def showPlot(*plots: genLinePlot):
 
         # averaging method -> this determines
         if plot.average > 1:
-
             for i in range(len(plot.x)):
                 if len(plot.x) % plot.average == 0:
                     newX.append(plot.x[i])
                     newY.append(plot.y[i])
+        else:
+            newX = plot.x
+            newY = plot.y
 
-        sPlt = fig.add_subplot(1, num, num)
-        sPlt.plot(newX, newY)
+        sPlt = fig.add_subplot(len(plots), 1, num + 1)
+        sPlt.set_title(plot.title)
+        sPlt.set_xlabel(plot.xlabel)
+        sPlt.set_ylabel(plot.ylabel)
+        sPlt.plot(newX, newY, color=plot.colour)
 
     plt.show()
-
-
