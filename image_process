@@ -1,36 +1,5 @@
-import os
-import cv2
-
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-
-import torch.optim as optim
-
-import matplotlib.pyplot as plt
-
-import numpy as np
-from tqdm import tqdm
-
-REBUILD_DATA = True
-
 class emotions():
-
-    # specify the image size
-    img_size = 32
-
-    # the location of the image files corresponding to class
-    afraid = "D:/2020/COMPSYS 302/picturs/original/sorted_emotion/afraid/training"
-    angry = "D:/2020/COMPSYS 302/picturs/original/sorted_emotion/angry/training"
-    disgust = "D:/2020/COMPSYS 302/picturs/original/sorted_emotion/disgust/training"
-    happy = "D:/2020/COMPSYS 302/picturs/original/sorted_emotion/happy/training"
-    neutral = "D:/2020/COMPSYS 302/picturs/original/sorted_emotion/neutral/training"
-    sad = "D:/2020/COMPSYS 302/picturs/original/sorted_emotion/sad/training"
-    surprised = "D:/2020/COMPSYS 302/picturs/original/sorted_emotion/surprised/training"
-
-    labels = {afraid: 0, angry: 1, disgust: 2, happy: 3, neutral: 4, sad: 5, surprised: 6}
-
-    training_data = [] # img of emotions
+    training_data = []  # img of emotions
 
     #  a counter for each class to see how many images has been processed
     afraid_count = 0
@@ -41,37 +10,49 @@ class emotions():
     sad_count = 0
     surprised_count = 0
 
-    def make_training_data(self):
+    def make_training_data(self, imgLocation_str, savedFilename_str, img_size_int):
+
+        # the location of the image files corresponding to class
+        afraid = imgLocation + "/afraid"
+        angry = imgLocation + "/angry"
+        disgust = imgLocation + "/disgust"
+        happy = imgLocation + "/happy"
+        neutral = imgLocation + "/neutral"
+        sad = imgLocation + "/sad"
+        surprised = imgLocation + "/surprised"
+
+        labels = {afraid: 0, angry: 1, disgust: 2, happy: 3, neutral: 4, sad: 5, surprised: 6}
+
         # iterates and processes through all the images from all the classes
-        for emotion in self.labels:
-            print(emotion)
+        for emotion in labels:
             for f in tqdm(os.listdir(emotion)):
                 try:
-                    path = os.path.join(emotion, f)
+                    path = emotion + "/" + f
                     img = cv2.imread(path, cv2.IMREAD_COLOR)
-                    img = cv2.resize(img, (self.img_size, self.img_size))
-                    self.training_data.append([np.array(img), np.eye(7)[self.labels[emotion]]])
+                    img = cv2.resize(img, (img_size, img_size))
+                    # print(img_size)
+                    self.training_data.append([np.array(img), labels[emotion]])
 
-                    if emotion == self.afraid:
+                    if emotion == afraid:
                         self.afraid_count += 1
-                    elif emotion == self.angry:
+                    elif emotion == angry:
                         self.angry_count += 1
-                    elif emotion == self.disgust:
+                    elif emotion == disgust:
                         self.disgust_count += 1
-                    elif emotion == self.happy:
+                    elif emotion == happy:
                         self.happy_count += 1
-                    elif emotion == self.neutral:
+                    elif emotion == neutral:
                         self.neutral_count += 1
-                    elif emotion == self.sad:
+                    elif emotion == sad:
                         self.sad_count += 1
-                    elif emotion == self.surprised:
+                    elif emotion == surprised:
                         self.surprised_count += 1
                 except Exception as e:
                     pass
-                    print(str(e))
+                    # print(str(e))
 
         np.random.shuffle(self.training_data)
-        np.save("training_data.npy", self.training_data)
+        np.save(savedFilename, self.training_data)
         print("Afraid:", self.afraid_count)
         print("Angry:", self.angry_count)
         print("Disgust:", self.disgust_count)
@@ -79,10 +60,3 @@ class emotions():
         print("Neutral:", self.neutral_count)
         print("Sad:", self.sad_count)
         print("Surprised:", self.surprised_count)
-
-if REBUILD_DATA:
-    emotions_data = emotions()
-    emotions_data.make_training_data()
-
-training_data = np.load("training_data.npy", allow_pickle = True)
-print(len(training_data))
