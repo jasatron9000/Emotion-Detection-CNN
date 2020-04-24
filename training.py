@@ -8,7 +8,7 @@ from tdqm import tqdm
 
 # A class that holds the necessary functions and variables to train the data
 class trainer:
-    def __init__(self, net, trainSet, testSet):
+    def __init__(self, net, trainSet, testSet=[]):
         self.net = net
         self.trainSet = trainSet
         self.testSet = testSet
@@ -20,7 +20,7 @@ class trainer:
 
         # Start the iteration process
         for e in range(epoch):
-            for data in tqdm(self.testSet, desc="EPOCH " + str(e + 1) + "/" + str(epoch)):
+            for data in tqdm(self.trainSet, desc="EPOCH " + str(e + 1) + "/" + str(epoch)):
                 batchImage, batchLabel = data
 
                 # Training Algorithm
