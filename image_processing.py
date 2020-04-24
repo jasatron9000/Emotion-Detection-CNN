@@ -1,5 +1,5 @@
 import os
-import cv2
+from PIL import Image as im
 from tqdm import tqdm
 import numpy as np
 import torch.utils.data as data
@@ -36,12 +36,11 @@ class emotions:
             for f in tqdm(os.listdir(emotion)):
                 try:
                     path = emotion + "/" + f
+                    img = im.open(path)
 
                     # Inserts the photo
-                    if colour:
-                        img = cv2.imread(path, cv2.IMREAD_COLOR)
-                    else:
-                        img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+                    if not colour:
+                        img = im.convert(mode="L")
 
                     self.training_data.append([np.array(img), labels[emotion]])
 
@@ -72,8 +71,6 @@ class emotions:
         print("Neutral:", self.neutral_count)
         print("Sad:", self.sad_count)
         print("Surprised:", self.surprised_count)
-
-        return self.training_data
 
     # Custom Transformations for our DataSet
     def Resize(self, size: int, crop=True):
@@ -119,7 +116,6 @@ class emotions:
     # ChangeToTensor -> This method allows you to change the PIL image format to
     def ChangeToTensor(self, device: str):
         pass
-
 
 class dataLoader(data.Dataset):
     def __init__(self, training_data):
