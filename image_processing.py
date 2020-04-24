@@ -1,10 +1,12 @@
 import os
 import cv2
-
 from tqdm import tqdm
 import numpy as np
+import torch.utils.data as data
+import torchvision.transforms.functional as transforms
 
-class emotions():
+
+class emotions:
     training_data = []  # img of emotions
 
     #  a counter for each class to see how many images has been processed
@@ -16,7 +18,7 @@ class emotions():
     sad_count = 0
     surprised_count = 0
 
-    def make_training_data(self, imgLocation_str, savedFilename_str, img_size_int):
+    def make_training_data(self, imgLocation: str, savedFilename: str, img_size: int, colour=True):
 
         # the location of the image files corresponding to class
         afraid = imgLocation + "/afraid"
@@ -34,9 +36,13 @@ class emotions():
             for f in tqdm(os.listdir(emotion)):
                 try:
                     path = emotion + "/" + f
-                    img = cv2.imread(path, cv2.IMREAD_COLOR)
-                    img = cv2.resize(img, (img_size, img_size))
-                    # print(img_size)
+
+                    # Inserts the photo
+                    if colour:
+                        img = cv2.imread(path, cv2.IMREAD_COLOR)
+                    else:
+                        img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+
                     self.training_data.append([np.array(img), labels[emotion]])
 
                     if emotion == afraid:
@@ -66,3 +72,65 @@ class emotions():
         print("Neutral:", self.neutral_count)
         print("Sad:", self.sad_count)
         print("Surprised:", self.surprised_count)
+
+        return self.training_data
+
+    # Custom Transformations for our DataSet
+    def Resize(self, size: int, crop=True):
+        newTrainData = []
+
+        for i in tqdm(range(len(self.training_data)), desc="Image Process: Resizing Images"):
+            if crop:
+                convertedImage = transforms.center_crop(self.training_data[i][0], size)
+            else:
+                convertedImage = transforms.resize(self.training_data[i][0], size)
+
+            newTrainData.append([convertedImage, self.training_data[i][1]])
+
+        print("Finished Processing: Array Length: " + str(len(newTrainData)))
+        self.training_data = newTrainData
+
+    # TODO: Implement FiveCrop which is a method that uses torchvision.transforms.functional.five_crop(img, size) on
+    #       each image.
+
+    # RandomCrop -> This method gets
+    def FiveCrop(self, amount: int):
+        pass
+
+    # Image Flip -> This method allows the user to get all the PIL images and flip them and outputs them as a new
+    # list of the flipped image
+    def ImageFlip(self):
+        newTrainData = []
+
+        # Iterates through the training data and appends two images which are the flipped and non-flipped image to
+        # the new array
+        for i in tqdm(range(len(self.training_data)), desc="Image Process: Flipping All Images"):
+            convertedImage = transforms.hflip(self.training_data[i][0])
+
+            newTrainData.append([convertedImage, self.training_data[i][1]])
+            newTrainData.append([self.training_data[i][0]])
+
+        print("Finished Processing: Array Length: " + str(len(newTrainData)))
+
+        return newTrainData
+
+    # TODO: Implement ChangeToTensor changes the list of PIL Images to a tensor
+
+    # ChangeToTensor -> This method allows you to change the PIL image format to
+    def ChangeToTensor(self, device: str):
+        pass
+
+
+class dataLoader(data.Dataset):
+    def __init__(self, training_data):
+        # Convert the training data of
+        print(training_data[0][0].shape)
+        self.image = training_data[0][0]
+        print(training_data[0][1].shape)
+        self.label = training_data[0][1]
+
+    def __len__(self):
+        return len(self.image)
+
+    def __getitem__(self, index):
+        return [self.image[index], self.label[index]]
