@@ -1,11 +1,10 @@
 import os
 import cv2
+
 from tqdm import tqdm
 import numpy as np
-import torch.utils.data as data
 
-
-class emotions:
+class emotions():
     training_data = []  # img of emotions
 
     #  a counter for each class to see how many images has been processed
@@ -17,7 +16,7 @@ class emotions:
     sad_count = 0
     surprised_count = 0
 
-    def make_training_data(self, imgLocation: str, savedFilename: str, img_size: int, colour=True):
+    def make_training_data(self, imgLocation_str, savedFilename_str, img_size_int):
 
         # the location of the image files corresponding to class
         afraid = imgLocation + "/afraid"
@@ -35,13 +34,9 @@ class emotions:
             for f in tqdm(os.listdir(emotion)):
                 try:
                     path = emotion + "/" + f
-
-                    #Inserts the photo
-                    if colour:
-                        img = cv2.imread(path, cv2.IMREAD_COLOR)
-                    else:
-                        img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-
+                    img = cv2.imread(path, cv2.IMREAD_COLOR)
+                    img = cv2.resize(img, (img_size, img_size))
+                    # print(img_size)
                     self.training_data.append([np.array(img), labels[emotion]])
 
                     if emotion == afraid:
@@ -71,20 +66,3 @@ class emotions:
         print("Neutral:", self.neutral_count)
         print("Sad:", self.sad_count)
         print("Surprised:", self.surprised_count)
-
-        return self.training_data
-
-
-class dataLoader(data.Dataset):
-    def __init__(self, training_data):
-        # Convert the training data of
-        print(training_data[0][0].shape)
-        self.image = training_data[0][0]
-        print(training_data[0][1].shape)
-        self.label = training_data[0][1]
-
-    def __len__(self):
-        return len(self.image)
-
-    def __getitem__(self, index):
-        return [self.image[index], self.label[index]]
