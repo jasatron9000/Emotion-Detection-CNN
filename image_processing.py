@@ -18,7 +18,7 @@ class emotions:
     sad_count = 0
     surprised_count = 0
 
-    def make_training_data(self, imgLocation: str, savedFilename: str, img_size: int, colour=True):
+    def make_training_data(self, imgLocation: str, savedFilename: str, colour=True):
 
         # the location of the image files corresponding to class
         afraid = imgLocation + "/afraid"
@@ -63,7 +63,7 @@ class emotions:
                     # print(str(e))
 
         np.random.shuffle(self.training_data)
-        np.save(savedFilename, self.training_data)
+        #np.save(savedFilename, self.training_data)
         print("Afraid:", self.afraid_count)
         print("Angry:", self.angry_count)
         print("Disgust:", self.disgust_count)
@@ -73,7 +73,7 @@ class emotions:
         print("Surprised:", self.surprised_count)
 
     # Custom Transformations for our DataSet
-    def Resize(self, size: int, crop=True):
+    def Resize(self, size: int, crop=False):
         newTrainData = []
 
         for i in tqdm(range(len(self.training_data)), desc="Image Process: Resizing Images"):
