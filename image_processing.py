@@ -87,12 +87,41 @@ class emotions:
         print("Finished Processing: Array Length: " + str(len(newTrainData)))
         self.training_data = newTrainData
 
-    # TODO: Implement FiveCrop which is a method that uses torchvision.transforms.functional.five_crop(img, size) on
-    #       each image.
+    # randomly crops an input image
+    def randomCrop(img, width, height):
+        assert img.shape[0] >= height
+        assert img.shape[1] >= width
+        x = random.randint(0, img.shape[1] - width)
+        y = random.randint(0, img.shape[0] - height)
+        cropped = img[y:y + height, x:x + width]
+        return cropped
 
-    # RandomCrop -> This method gets
-    def FiveCrop(self, amount: int):
-        pass
+        # RandomCrop -> This method randomly crops every image 'amount' times and outputs them as a new
+
+    # list of the flipped image
+    def RandomCropData(self, amount: int, width: int, height: int):
+        newTrainData = []
+
+        # Iterates through the training data and appends 'amount' images which are cropped images with 'width' and 'height'
+        # as the new dimensions of the images
+        for i in tqdm(range(len(self.training_data)), desc="Image Process: Randomly Cropping All Images"):  # 4900
+            crops = []
+            count = amount
+            while count > 0:
+                convertedImage = randomCrop(self.training_data[i][0], width, height)
+
+                if convertedImage not in crops:
+                    crops.append([convertedImage, self.training_data[i][1]])
+                else:
+                    count += 1
+
+                count -= 1
+            # print(len(crops))
+            for c in range(len(crops)):
+                newTrainData.append(crops[c])
+
+        print("Finished Processing: Array Length: " + str(len(newTrainData)))
+        return newTrainData
 
     # Image Flip -> This method allows the user to get all the PIL images and flip them and outputs them as a new
     # list of the flipped image
