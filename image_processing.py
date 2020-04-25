@@ -4,6 +4,18 @@ from tqdm import tqdm
 import numpy as np
 import torch.utils.data as data
 import torchvision.transforms.functional as transforms
+import random
+
+
+def randomCrop(img, width, height):
+    assert img.shape[0] >= height
+    assert img.shape[1] >= width
+    x = random.randint(0, img.shape[1] - width)
+    y = random.randint(0, img.shape[0] - height)
+    cropped = img[y:y + height, x:x + width]
+    return cropped
+
+    # RandomCrop -> This method randomly crops every image 'amount' times and outputs them as a new
 
 
 class emotions:
@@ -42,7 +54,7 @@ class emotions:
                     if not colour:
                         img = im.convert(mode="L")
 
-                    self.training_data.append([np.array(img), labels[emotion]])
+                    self.training_data.append([img, labels[emotion]])
 
                     if emotion == afraid:
                         self.afraid_count += 1
@@ -88,27 +100,18 @@ class emotions:
         self.training_data = newTrainData
 
     # randomly crops an input image
-    def randomCrop(img, width, height):
-        assert img.shape[0] >= height
-        assert img.shape[1] >= width
-        x = random.randint(0, img.shape[1] - width)
-        y = random.randint(0, img.shape[0] - height)
-        cropped = img[y:y + height, x:x + width]
-        return cropped
-
-        # RandomCrop -> This method randomly crops every image 'amount' times and outputs them as a new
 
     # list of the flipped image
     def RandomCropData(self, amount: int, width: int, height: int):
         newTrainData = []
 
-        # Iterates through the training data and appends 'amount' images which are cropped images with 'width' and 'height'
-        # as the new dimensions of the images
+        # Iterates through the training data and appends 'amount' images which are cropped images with 'width' and
+        # 'height' as the new dimensions of the images
         for i in tqdm(range(len(self.training_data)), desc="Image Process: Randomly Cropping All Images"):  # 4900
             crops = []
             count = amount
             while count > 0:
-                convertedImage = randomCrop(self.training_data[i][0], width, height)
+                convertedImage = randomCrop(np.array(self.training_data[i][0]), width, height)
 
                 if convertedImage not in crops:
                     crops.append([convertedImage, self.training_data[i][1]])
