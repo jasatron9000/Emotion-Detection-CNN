@@ -15,7 +15,7 @@ class trainer:
         self.trainSet = trainSet
         self.testSet = testSet
 
-    def startTrain(self, epoch, batchSize, lr=0.001, accCalc=10):
+    def startTrain(self, epoch, device, batch, lr=0.001):
         pltLoss = plt.genLinePlot(title="Loss Analysis", ylabel="Loss", xlabel="Epoch", numOfLines=2,
                                   legendList=["train", "test"])
         pltAcc = plt.genLinePlot(title="Accuracy Analysis", ylabel="Accuracy", xlabel="Epoch", numOfLines=2,
@@ -28,11 +28,13 @@ class trainer:
         # Start the iteration process
         for e in range(epoch):
 
-            for index, data in tqdm(enumerate(self.trainSet), desc="EPOCH " + str(e + 1) + "/" + str(epoch)):
-                batchImage, batchLabel = data
+            for trainingData in tqdm(self.trainSet, desc="EPOCH " + str(e + 1) + "/" + str(epoch)):
+                batchImage, batchLabel = trainingData
+                batchImage = batchImage.to(device)
+                batchLabel = batchLabel.to(device)
 
                 # Training Algorithm
-                optimiser.zero_grad()
+                self.net.zero_grad()
                 output = self.net(batchImage)
                 loss = loss_func(output, batchLabel)
                 loss.backward()
@@ -46,22 +48,28 @@ class trainer:
                 trainSum = 0
 
                 # For the Training
-                for data in tqdm(range(len(self.trainSet)), desc="Calculating Training Loss/Accuracy"):
-                    trainImage, trainLabel = data
-                    trainOutputAcc = self.net(validImage)
+                for dataTrain in tqdm(self.trainSet, desc="Calculating Training Loss/Accuracy"):
+                    trainImage, trainLabel = dataTrain
+
+                    trainImage = trainImage.to(device)
+                    trainLabel = trainLabel.to(device)
+                    trainOutputAcc = self.net(trainImage)
 
                     for index, i in enumerate(trainOutputAcc):
-                        trainSum += loss_func(trainOutputAcc, trainLabel).item()
-
                         if torch.argmax(i) == trainLabel[index]:
                             trainCorrect += 1
+                    break
 
-                trainAcc = validCorrect / len(self.trainSet)
-                trainLoss = validSum / len(self.trainSet)
+                trainAcc = validCorrect / batch
+                trainLoss = validSum / batch
 
                 # For the Validation
-                for data in tqdm(range(len(self.validSet)), desc="Calculating Validation Loss/Accuracy"):
-                    validImage, validLabel = data
+                for dataValid in tqdm(self.validSet, desc="Calculating Validation Loss/Accuracy"):
+                    validImage, validLabel = dataValid
+
+                    validImage = validImage.to(device)
+                    validLabel = validLabel.to(device)
+
                     validOutputAcc = self.net(validImage)
 
                     for index, i in enumerate(validOutputAcc):
@@ -69,26 +77,17 @@ class trainer:
 
                         if torch.argmax(i) == validLabel[index]:
                             validCorrect += 1
+                    break
 
-                validAcc = validCorrect / len(self.validSet)
-                validLoss = validSum / len(self.validSet)
+                validAcc = validCorrect / batch
+                validLoss = validSum / batch
 
             plt.insertY(pltLoss, trainLoss, validLoss)
             plt.insertY(pltAcc, trainAcc, validAcc)
 
             # output message about loss
-            print("EPOCH #" + str(e + 1) + " Completed.")
-            print("Current Class")
+            print("\nEPOCH #" + str(e + 1) + " Completed.")
+            print("Current Loss (Train/Valid): " + str(trainLoss) + "/" + str(validLoss))
+            print("Current Accuracy (Train/Valid): " + str(trainAcc) + "/" + str(validAcc) + "\n")
 
-
-class loadTensors(data.Dataset):
-    def __init__(self, images, labels):
-        # Convert the training data of
-        self.images = images
-        self.labels = labels
-
-    def __len__(self):
-        return len(self.images)
-
-    def __getitem__(self, index):
-        return [self.images[index], self.labels[index]]
+        plt.showPlot(pltLoss, pltAcc)

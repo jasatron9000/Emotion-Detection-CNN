@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class AlexNet(nn.Module):
-    def __init__(self):
+    def __init__(self, size):
         super().__init__()
 
         # Define Convolution Layers
@@ -15,7 +15,7 @@ class AlexNet(nn.Module):
         self.conv5 = nn.Conv2d(384, 256, 3, padding=1)
 
         # Finding out the total nodes after the convolution layers
-        x = torch.randn(3, 256, 256).view(-1, 3, 256, 256)
+        x = torch.randn(3, size, size).view(-1, 3, size, size)
         self.to_linear = -1
         self.calcConvToLinear(x)
 
@@ -58,15 +58,15 @@ class AlexNet(nn.Module):
         return F.softmax(x, dim=1)
 
 
-class TestClass:
-    def __init__(self):
+class TestClass(nn.Module):
+    def __init__(self, size):
         super().__init__()
 
         # Define Convolution Layers
         self.conv1 = nn.Conv2d(3, 96, 11, stride=4)
 
         # Finding out the total nodes after the convolution layers
-        x = torch.randn(3, 256, 256).view(-1, 3, 256, 256)
+        x = torch.randn(3, size, size).view(-1, 3, size, size)
         self.to_linear = -1
         self.calcConvToLinear(x)
 

@@ -119,13 +119,11 @@ class emotions:
             trainSplit = int(maxVal * percent)
             validSplit = int(maxVal * (percent + ((1 - percent) / 2)))
 
-            print(trainSplit, validSplit)
-
             trainSet = emote[:trainSplit]
             validSet = emote[trainSplit:validSplit]
             testSet = emote[validSplit:]
 
-            print("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+            print("\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
             print('Total Images (train, valid, test): {0}/{1}/{2}'.format(str(len(trainSet)),
                                                                           str(len(validSet)),
                                                                           str(len(testSet))))
