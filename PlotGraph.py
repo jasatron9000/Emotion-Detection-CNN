@@ -15,39 +15,47 @@ import matplotlib.pyplot as plt
 #   -average            -> the amount of iterations it will go through the graph and averages it
 #   -x and y            -> pre-defined x and y data
 class genLinePlot:
-    def __init__(self, colour="blue", title="", xlabel="", ylabel="", average=1, x=None, y=None):
+    def __init__(self, title="", xlabel="", ylabel="", x=None, y=None, numOfLines=1, legendList=None):
+        self.numOfLines = numOfLines
+        self.legendList = legendList
+
         if y is None:
             self.y = []
+
+            if numOfLines > 1:
+                for i in range(numOfLines):
+                    self.y.append([])
         else:
             self.y = y
 
         if x is None:
             self.x = []
+
+            if numOfLines > 1:
+                for i in range(numOfLines):
+                    self.x.append([])
         else:
             self.x = x
-        self.colour = colour
+
         self.title = title
         self.xlabel = xlabel
         self.ylabel = ylabel
-        self.average = average
 
 
 # insertY : this allows the user to just append the y axis
 # PARAMS:
 #   -plotArray  -> which plot class will be used
 #   -y          -> what the data that will be appended
-def insertY(plotArray: genLinePlot, ny):
-    plotArray.y.append(ny)
-    plotArray.x.append(len(plotArray.y))
-
-
-# insertY : this allows the user to just append the y axis
-# PARAMS:
-#   -plotArray  -> which plot class will be used
-#   -y and x    -> what the data that will be appended
-def insertDim(plotArray: genLinePlot, ny, nx):
-    plotArray.y.append(ny)
-    plotArray.x.append(nx)
+def insertY(plotArray: genLinePlot, *ny):
+    if len(ny) != plotArray.numOfLines:
+        raise ValueError('Not enough arguments for the y value')
+    if plotArray.numOfLines <= 1:
+        plotArray.y.append(ny)
+        plotArray.x.append(len(plotArray.y))
+    else:
+        for i, yVal in enumerate(ny):
+            plotArray.y[i].append(yVal)
+            plotArray.x[i].append(len(plotArray.y[i]))
 
 
 def showPlot(*plots: genLinePlot):
@@ -55,23 +63,20 @@ def showPlot(*plots: genLinePlot):
     fig = plt.figure()
 
     for num, plot in enumerate(plots):
-        newX = []
-        newY = []
-
-        # averaging method -> this determines
-        if plot.average > 1:
-            for i in range(len(plot.x)):
-                if len(plot.x) % plot.average == 0:
-                    newX.append(plot.x[i])
-                    newY.append(plot.y[i])
-        else:
-            newX = plot.x
-            newY = plot.y
-
         sPlt = fig.add_subplot(len(plots), 1, num + 1)
         sPlt.set_title(plot.title)
         sPlt.set_xlabel(plot.xlabel)
         sPlt.set_ylabel(plot.ylabel)
-        sPlt.plot(newX, newY, color=plot.colour)
+
+        if plot.numOfLines <= 1:
+            sPlt.plot(plot.x, plot.y)
+        else:
+            for pltNum in range(plot.numOfLines):
+                line, = sPlt.plot(plot.x[pltNum], plot.y[pltNum])
+                line.set_label(plot.legendList[pltNum])
+            sPlt.legend()
 
     plt.show()
+
+
+

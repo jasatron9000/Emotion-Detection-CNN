@@ -3,9 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import PlotGraph as plt
-from tdqm import tqdm
-
-plt.genLinePlot
+import torch.utils.data as data
+from tqdm import tqdm
 
 
 # A class that holds the necessary functions and variables to train the data
@@ -17,6 +16,11 @@ class trainer:
         self.testSet = testSet
 
     def startTrain(self, epoch, batchSize, lr=0.001, accCalc=10):
+        pltLoss = plt.genLinePlot(title="Loss Analysis", ylabel="Loss", xlabel="Epoch", numOfLines=2,
+                                  legendList=["train", "test"])
+        pltAcc = plt.genLinePlot(title="Accuracy Analysis", ylabel="Accuracy", xlabel="Epoch", numOfLines=2,
+                                 legendList=["train", "test"])
+
         # Initialise the optimiser and the loss function
         optimiser = optim.Adam(self.net.parameters(), lr=lr)
         loss_func = nn.CrossEntropyLoss()
@@ -69,6 +73,22 @@ class trainer:
                 validAcc = validCorrect / len(self.validSet)
                 validLoss = validSum / len(self.validSet)
 
+            plt.insertY(pltLoss, trainLoss, validLoss)
+            plt.insertY(pltAcc, trainAcc, validAcc)
+
             # output message about loss
             print("EPOCH #" + str(e + 1) + " Completed.")
-            print("Current Loss: " + str(loss.item()))
+            print("Current Class")
+
+
+class loadTensors(data.Dataset):
+    def __init__(self, images, labels):
+        # Convert the training data of
+        self.images = images
+        self.labels = labels
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, index):
+        return [self.images[index], self.labels[index]]
