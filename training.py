@@ -84,6 +84,7 @@ class trainer:
                 validAcc = validCorrect / batch
                 validLoss = validSum / batch
 
+
             plt.insertY(pltLoss, trainLoss, validLoss)
             plt.insertY(pltAcc, trainAcc, validAcc)
 
@@ -91,5 +92,29 @@ class trainer:
             print("\nEPOCH #" + str(e + 1) + " Completed.")
             print("Current Loss (Train/Valid): " + str(trainLoss) + "/" + str(validLoss))
             print("Current Accuracy (Train/Valid): " + str(trainAcc) + "/" + str(validAcc) + "\n")
+
+        TestCorrect = 0
+        TestSum = 0
+        matrix_plot = []
+        with torch.no_grad():
+            for data in tqdm(range(len(self.testSet)), desc="Calculating Testing Accuracy"):
+                testImage, testLabel = data
+                predicted = self.net(testImage)
+
+                for index, i in enumerate(predicted):
+                    testSum += loss_func(testOutputAcc, testLabel).item()
+                    matrix_plot.append([torch.argmax(i), testLabel[index]])
+
+                    if torch.argmax(i) == testLabel[index]:
+                        testCorrect += 1
+
+            testAcc = testCorrect / len(self.testSet)
+            testLoss = testSum / len(self.testSet)
+
+        empty = torch.zeros(7, 7, dtype=torch.int32)
+        confusion_matrix = confusion_matrix.numpy()
+        for i in matrix_plot:
+            predicted_emotion, actual_emotion = i
+            empty[predicted_emotion, actual_emotion] = confusion_matrix[predicted_emotion, actual_emotion] + 1
 
         plt.showPlot(pltLoss, pltAcc)

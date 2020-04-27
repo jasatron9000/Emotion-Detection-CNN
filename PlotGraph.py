@@ -42,6 +42,19 @@ class genLinePlot:
         self.ylabel = ylabel
 
 
+def plot_confusion_matrix(confusion_matrix, CNN_name: str):
+    names = ["Afraid", "Angry", "Disgust", "Happy", "Neutral", "Sad", "Surprised"]
+    df_cm = pd.DataFrame(confusion_matrix, names, names)
+    plt.figure(figsize=(10, 7))
+    sn.set(font_scale=1.4)  # for label size
+    sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}, cmap="BuPu")  # font size
+    ax = plt.axes()
+    ax.set_title(CNN_name + 'Emotion Confusion Matrix')
+    plt.xlabel('Actual Emotion')
+    plt.ylabel('Predicted Emotion')
+    plt.show()
+
+
 # insertY : this allows the user to just append the y axis
 # PARAMS:
 #   -plotArray  -> which plot class will be used
