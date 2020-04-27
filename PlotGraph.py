@@ -5,6 +5,8 @@
 # ============================================================
 
 import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sn
 
 
 # genLinePlot -> a class that holds the information that a single plot needs
@@ -90,6 +92,3 @@ def showPlot(*plots: genLinePlot):
             sPlt.legend()
 
     plt.show()
-
-
-

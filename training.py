@@ -105,6 +105,7 @@ class trainer:
             predicted_emotion, actual_emotion = i
             empty[predicted_emotion, actual_emotion] = confusion_matrix[predicted_emotion, actual_emotion] + 1
 
+        plt.plot_confusion_matrix(confusion_matrix, "TestClass")
 
 class loadTensors(data.Dataset):
     def __init__(self, images, labels):

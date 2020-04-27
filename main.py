@@ -2,9 +2,7 @@ import torch
 from image_processing import emotions
 from training import trainer, loadTensors
 import torch.utils.data as data
-from sklearn import svm, datasets
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import plot_confusion_matrix
+
 
 import sys
 
