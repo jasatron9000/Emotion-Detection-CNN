@@ -50,7 +50,8 @@ class trainer:
                 trainSum = 0
 
                 # For the Training
-                for dataTrain in tqdm(self.trainSet[:int(len(self.trainSet)/10)], desc="Calculating Training Loss/Accuracy"):
+                for dataTrain in tqdm(self.trainSet,
+                                      desc="Calculating Training Loss/Accuracy"):
                     trainImage, trainLabel = dataTrain
 
                     trainImage = trainImage.to(device)
@@ -62,7 +63,7 @@ class trainer:
                             trainCorrect += 1
                     break
 
-                trainAcc = validCorrect / batch
+                trainAcc = trainCorrect / batch
                 trainLoss = lastLoss
 
                 # For the Validation
@@ -84,7 +85,6 @@ class trainer:
                 validAcc = validCorrect / batch
                 validLoss = validSum / batch
 
-
             plt.insertY(pltLoss, trainLoss, validLoss)
             plt.insertY(pltAcc, trainAcc, validAcc)
 
@@ -93,16 +93,18 @@ class trainer:
             print("Current Loss (Train/Valid): " + str(trainLoss) + "/" + str(validLoss))
             print("Current Accuracy (Train/Valid): " + str(trainAcc) + "/" + str(validAcc) + "\n")
 
-        TestCorrect = 0
-        TestSum = 0
+        testCorrect = 0
+        testSum = 0
         matrix_plot = []
         with torch.no_grad():
-            for data in tqdm(range(len(self.testSet)), desc="Calculating Testing Accuracy"):
-                testImage, testLabel = data
+            for dataTest in tqdm(self.testSet, desc="Calculating Testing Accuracy"):
+                testImage, testLabel = dataTest
+                testImage = testImage.to(device)
+                testLabel = testLabel.to(device)
                 predicted = self.net(testImage)
 
                 for index, i in enumerate(predicted):
-                    testSum += loss_func(testOutputAcc, testLabel).item()
+                    testSum += loss_func(predicted, testLabel).item()
                     matrix_plot.append([torch.argmax(i), testLabel[index]])
 
                     if torch.argmax(i) == testLabel[index]:
@@ -112,9 +114,11 @@ class trainer:
             testLoss = testSum / len(self.testSet)
 
         empty = torch.zeros(7, 7, dtype=torch.int32)
-        confusion_matrix = confusion_matrix.numpy()
+        confusion_matrix = empty.numpy()
         for i in matrix_plot:
             predicted_emotion, actual_emotion = i
-            empty[predicted_emotion, actual_emotion] = confusion_matrix[predicted_emotion, actual_emotion] + 1
+            confusion_matrix[predicted_emotion, actual_emotion] = confusion_matrix[
+                                                                      predicted_emotion, actual_emotion] + 1
 
         plt.showPlot(pltLoss, pltAcc)
+        print(confusion_matrix)

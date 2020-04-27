@@ -63,7 +63,7 @@ class TestClass(nn.Module):
         super().__init__()
 
         # Define Convolution Layers
-        self.conv1 = nn.Conv2d(3, 96, 11, stride=4)
+        self.conv1 = nn.Conv2d(3, 1, 1, stride=1)
 
         # Finding out the total nodes after the convolution layers
         x = torch.randn(3, size, size).view(-1, 3, size, size)
@@ -82,6 +82,7 @@ class TestClass(nn.Module):
         # Check if the total node has been calculated
         if self.to_linear is -1:
             self.to_linear = x[0].shape[0] * x[0].shape[1] * x[0].shape[2]
+            print(self.to_linear)
 
         return x
 

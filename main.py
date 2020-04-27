@@ -17,15 +17,15 @@ import AlexNet as AN
 import SqueezeNet as SN
 
 # Constants
-EPOCHS = 3
-BATCH_SIZE = 32
-IMAGE_SIZE = 256
-CROP_SIZE = 224
+EPOCHS = 100
+BATCH_SIZE = 64
+IMAGE_SIZE = 50
+CROP_SIZE = 50
 REBUILD_DATA = False
 DEVICE = None
 TRAIN_PERCENT = 0.7
 DATA_LOCATION = "D:/Biggie Cheese/Desktop/Uni/302/Data/KDEF Updated"  # FILE LOCATION OF THE DATA
-SAVE_LOCATION = "D:\\Biggie Cheese\\Desktop\\a"  # WHERE YOU WANT TO SAVE THE AUGMENTED DATA
+SAVE_LOCATION = "D:/Biggie Cheese/Desktop/a"  # WHERE YOU WANT TO SAVE THE AUGMENTED DATA
 LOAD_LOCATION = "D:/Biggie Cheese/Desktop/a"
 
 # Initialising the device
@@ -42,8 +42,8 @@ else:
 if REBUILD_DATA:
     rawData = emotions(IMAGE_SIZE)
     rawData.make_training_data(DATA_LOCATION)
-    rawData.ImageFlip()
-    rawData.RandomCropData(5, CROP_SIZE, CROP_SIZE)
+    # rawData.ImageFlip()
+    # rawData.RandomCropData(5, CROP_SIZE, CROP_SIZE)
     rawData.save(SAVE_LOCATION, TRAIN_PERCENT)
     LOAD_LOCATION = SAVE_LOCATION
 
@@ -57,11 +57,7 @@ validSet = data.DataLoader(valid, batch_size=BATCH_SIZE, shuffle=True)
 testSet = data.DataLoader(test, batch_size=BATCH_SIZE, shuffle=True)
 print("\nIMAGES HAS BEEN LOADED IN THE PROGRAM")
 
-net = SN.SqueezeNet().to(DEVICE)
-
-test = torch.randn((10, 3, 224, 224)).to(DEVICE)
-
-x = net(test)
+net = AN.TestClass(CROP_SIZE).to(DEVICE)
 
 trainBot = trainer(net, trainSet, validSet, testSet)
 

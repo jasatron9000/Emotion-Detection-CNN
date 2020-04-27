@@ -143,7 +143,7 @@ class emotions:
                 testX[0].save(os.path.join(path, "test", emotion[index]) + "\\" + str(i) + ".JPEG",
                                   total=len(trainSet))
 
-            print('Done. Completed Saving Photos for ' + emotion[index])
+            print('\nDone. Completed Saving Photos for ' + emotion[index])
 
     # list of the flipped image
     def RandomCropData(self, amount: int, width: int, height: int):
@@ -167,7 +167,7 @@ class emotions:
             for c in range(len(crops)):
                 newTrainData.append(crops[c])
 
-        print("Finished Processing: Array Length: " + str(len(newTrainData)))
+        print("\nFinished Processing: Array Length: " + str(len(newTrainData)))
         self.training_data = newTrainData
 
     # Image Flip -> This method allows the user to get all the PIL images and flip them and outputs them as a new
@@ -183,7 +183,7 @@ class emotions:
             newTrainData.append([convertedImage, self.training_data[i][1]])
             newTrainData.append([self.training_data[i][0], self.training_data[i][1]])
 
-        print("Finished Processing: Array Length: " + str(len(newTrainData)))
+        print("\nFinished Processing: Array Length: " + str(len(newTrainData)))
 
         self.training_data = newTrainData
 
