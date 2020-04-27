@@ -119,7 +119,6 @@ class trainer:
             predicted_emotion, actual_emotion = i
             confusion_matrix[predicted_emotion, actual_emotion] = confusion_matrix[
                                                                       predicted_emotion, actual_emotion] + 1
-            empty[predicted_emotion, actual_emotion] = confusion_matrix[predicted_emotion, actual_emotion] + 1
 
         plt.plot_confusion_matrix(confusion_matrix, "TestClass")
 
