@@ -1,6 +1,6 @@
 import torch
 from image_processing import emotions
-from training import trainer, loadTensors
+from training import trainer
 import torch.utils.data as data
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import transforms
@@ -14,12 +14,13 @@ import sys
 sys.path.insert(1, 'models')
 
 import AlexNet as AN
+import SqueezeNet as SN
 
 # Constants
 EPOCHS = 3
-BATCH_SIZE = 16
+BATCH_SIZE = 32
 IMAGE_SIZE = 256
-CROP_SIZE = 227
+CROP_SIZE = 224
 REBUILD_DATA = False
 DEVICE = None
 TRAIN_PERCENT = 0.7
@@ -56,7 +57,11 @@ validSet = data.DataLoader(valid, batch_size=BATCH_SIZE, shuffle=True)
 testSet = data.DataLoader(test, batch_size=BATCH_SIZE, shuffle=True)
 print("\nIMAGES HAS BEEN LOADED IN THE PROGRAM")
 
-net = AN.AlexNet(CROP_SIZE).to(DEVICE)
+net = SN.SqueezeNet().to(DEVICE)
+
+test = torch.randn((10, 3, 224, 224)).to(DEVICE)
+
+x = net(test)
 
 trainBot = trainer(net, trainSet, validSet, testSet)
 

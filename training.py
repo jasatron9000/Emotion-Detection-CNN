@@ -27,6 +27,7 @@ class trainer:
 
         # Start the iteration process
         for e in range(epoch):
+            lastLoss = 0
 
             for trainingData in tqdm(self.trainSet, desc="EPOCH " + str(e + 1) + "/" + str(epoch)):
                 batchImage, batchLabel = trainingData
@@ -37,6 +38,7 @@ class trainer:
                 self.net.zero_grad()
                 output = self.net(batchImage)
                 loss = loss_func(output, batchLabel)
+                lastLoss = loss.item()
                 loss.backward()
                 optimiser.step()
 
@@ -48,7 +50,7 @@ class trainer:
                 trainSum = 0
 
                 # For the Training
-                for dataTrain in tqdm(self.trainSet, desc="Calculating Training Loss/Accuracy"):
+                for dataTrain in tqdm(self.trainSet[:int(len(self.trainSet)/10)], desc="Calculating Training Loss/Accuracy"):
                     trainImage, trainLabel = dataTrain
 
                     trainImage = trainImage.to(device)
@@ -61,7 +63,7 @@ class trainer:
                     break
 
                 trainAcc = validCorrect / batch
-                trainLoss = validSum / batch
+                trainLoss = lastLoss
 
                 # For the Validation
                 for dataValid in tqdm(self.validSet, desc="Calculating Validation Loss/Accuracy"):

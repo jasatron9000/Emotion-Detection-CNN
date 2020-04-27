@@ -130,15 +130,18 @@ class emotions:
             print("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 
             for i, trainX in tqdm(enumerate(trainSet),
-                                  desc="Saving training data for \"" + emotion[index] + "\" class"):
+                                  desc="Saving training data for \"" + emotion[index] + "\" class",
+                                  total=len(trainSet)):
                 trainX[0].save(os.path.join(path, "train", emotion[index]) + "\\" + str(i) + ".JPEG")
 
             for i, validX in tqdm(enumerate(validSet),
-                                  desc="Saving training data for \"" + emotion[index] + "\" class"):
+                                  desc="Saving training data for \"" + emotion[index] + "\" class",
+                                  total=len(trainSet)):
                 validX[0].save(os.path.join(path, "validate", emotion[index]) + "\\" + str(i) + ".JPEG")
 
             for i, testX in tqdm(enumerate(testSet), desc="Saving training data for \"" + emotion[index] + "\" class"):
-                testX[0].save(os.path.join(path, "test", emotion[index]) + "\\" + str(i) + ".JPEG")
+                testX[0].save(os.path.join(path, "test", emotion[index]) + "\\" + str(i) + ".JPEG",
+                                  total=len(trainSet))
 
             print('Done. Completed Saving Photos for ' + emotion[index])
 

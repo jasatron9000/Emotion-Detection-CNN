@@ -12,7 +12,7 @@ class Fire(nn.Module):
 
         # Define Expand Layer
         self.expandConv3x3 = nn.Conv2d(squeeze, expand3x3, 3, padding=1)
-        self.squeezeConv1x1 = nn.Conv2d(squeeze, expand1x1, 1)
+        self.expandConv1x1 = nn.Conv2d(squeeze, expand1x1, 1)
 
     def forward(self, x):
         x = F.relu(self.squeezeConv(x), inplace=True)
@@ -34,7 +34,7 @@ class SqueezeNet(nn.Module):
         self.fire6 = Fire(384, 48, 192, 192)
         self.fire7 = Fire(384, 64, 256, 256)
         self.fire8 = Fire(512, 64, 256, 256)
-        self.conv2 = nn.Conv2d(512, 7, 1)
+        self.conv2 = nn.Conv2d(512, 7, kernel_size=1, stride=1)
 
         # Dropout
         self.dropout = nn.Dropout(p=0.5)
@@ -52,6 +52,7 @@ class SqueezeNet(nn.Module):
         x = F.max_pool2d(x, kernel_size=3, stride=2)
         x = self.fire8(x)
         x = self.dropout(x)
-        x = F.avg_pool2d(self.conv2(x), kernel_size=13, stride=1)
-        x = F.softmax(x)
+        x = self.conv2(x)
+        x = F.adaptive_avg_pool2d(x, (1, 1))
+        x = F.softmax(x, dim=0).view(-1, 7)
         return x
