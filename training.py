@@ -124,3 +124,19 @@ class trainer:
 
         plt.showPlot(pltLoss, pltAcc)
         print(confusion_matrix)
+
+    def saveCheckpoint(self, model, optimizer, epoch: int, batchSize: int, fileName: str):
+        checkpoint = {
+            "model_save": model.state_dict(),
+            "optimizer_save": optimizer.state_dict(),
+            "epoch_save": epoch,
+            "batchSize_save": batchSize
+        }
+
+        torch.save(checkpoint, fileName
+
+    def loadModel(self, model, optimizer, checkpoint_path: str):
+        load_checkpoint = torch.load(checkpoint_path)
+
+        model.load_state_dict(load_checkpoint["model_save"])
+        optimizer.load_state_dict(load_checkpoint["optimizer_save"])
