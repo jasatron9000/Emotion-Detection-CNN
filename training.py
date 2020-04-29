@@ -15,6 +15,8 @@ class trainer:
         self.trainSet = trainSet
         self.testSet = testSet
 
+        self.loss_func =  nn.CrossEntropyLoss()
+
     def startTrain(self, epoch, device, batch, lr=0.001):
         pltLoss = plt.genLinePlot(title="Loss Analysis", ylabel="Loss", xlabel="Epoch", numOfLines=2,
                                   legendList=["train", "test"])
@@ -23,7 +25,8 @@ class trainer:
 
         # Initialise the optimiser and the loss function
         optimiser = optim.Adam(self.net.parameters(), lr=lr)
-        loss_func = nn.CrossEntropyLoss()
+
+
 
         # Start the iteration process
         for e in range(epoch):
@@ -41,49 +44,6 @@ class trainer:
                 lastLoss = loss.item()
                 loss.backward()
                 optimiser.step()
-
-            # Validation Accuracy/Loss Calculation
-            with torch.no_grad():
-                validCorrect = 0
-                validSum = 0
-                trainCorrect = 0
-                trainSum = 0
-
-                # For the Training
-                for dataTrain in tqdm(self.trainSet,
-                                      desc="Calculating Training Loss/Accuracy"):
-                    trainImage, trainLabel = dataTrain
-
-                    trainImage = trainImage.to(device)
-                    trainLabel = trainLabel.to(device)
-                    trainOutputAcc = self.net(trainImage)
-
-                    for index, i in enumerate(trainOutputAcc):
-                        if torch.argmax(i) == trainLabel[index]:
-                            trainCorrect += 1
-                    break
-
-                trainAcc = trainCorrect / batch
-                trainLoss = lastLoss
-
-                # For the Validation
-                for dataValid in tqdm(self.validSet, desc="Calculating Validation Loss/Accuracy"):
-                    validImage, validLabel = dataValid
-
-                    validImage = validImage.to(device)
-                    validLabel = validLabel.to(device)
-
-                    validOutputAcc = self.net(validImage)
-
-                    for index, i in enumerate(validOutputAcc):
-                        validSum += loss_func(validOutputAcc, validLabel).item()
-
-                        if torch.argmax(i) == validLabel[index]:
-                            validCorrect += 1
-                    break
-
-                validAcc = validCorrect / batch
-                validLoss = validSum / batch
 
             plt.insertY(pltLoss, trainLoss, validLoss)
             plt.insertY(pltAcc, trainAcc, validAcc)
@@ -124,3 +84,35 @@ class trainer:
 
         plt.showPlot(pltLoss, pltAcc)
         print(confusion_matrix)
+
+        def trainingEval(iterations, train=False):
+            with self.net.zero_grad():
+                sumLoss = 0
+                correct = 0
+                total = 0
+
+                if train:
+                    it = iter(self.trainSet)
+                else:
+                    it = iter(self.validSet)
+
+                for iterate in range(iterations):
+                    image, label = next(it)
+
+                    # Calculate the loss
+                    outputEval = self.net(image)
+                    sumLoss += self.loss_func(output, label).item()
+
+                    for idx, out in enumerate(outputEval):
+                        if torch.argmax(out) == label[idx]:
+                            correct += 1
+                        total += 1
+
+                lossOut = sumLoss / iterations
+                accOut = correct / total
+
+                return lossOut, accOut
+
+
+
+
