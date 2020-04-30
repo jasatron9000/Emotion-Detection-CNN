@@ -54,18 +54,18 @@ class emotions:
                 try:
                     path = emotion + "/" + f
                     image = im.open(path)
-                    width, height = image.size
+                    # width, height = image.size
 
-                    left = (width - width) / 2
-                    top = (height - width) / 2
-                    right = (width + width) / 2
-                    bottom = (height + width) / 2
+                    # left = (width - width) / 2
+                    # top = (height - width) / 2
+                    # right = (width + width) / 2
+                    # bottom = (height + width) / 2
 
-                    image = image.crop((left, top, right, bottom))
-                    image = image.resize((self.imgSize, self.imgSize))
+                    # image = image.crop((left, top, right, bottom))
+                    # image = image.resize((self.imgSize, self.imgSize))
                     # Inserts the photo
-                    self.training_data.append([image, labels[emotion]])
-
+                    self.training_data.append([np.array(image), labels[emotion]])
+                    image.close()
                     if emotion == afraid:
                         self.afraid_count += 1
                     elif emotion == angry:
@@ -132,16 +132,20 @@ class emotions:
             for i, trainX in tqdm(enumerate(trainSet),
                                   desc="Saving training data for \"" + emotion[index] + "\" class",
                                   total=len(trainSet)):
-                trainX[0].save(os.path.join(path, "train", emotion[index]) + "\\" + str(i) + ".JPEG")
+                image = im.fromarray(trainX[0])
+                image.save(os.path.join(path, "train", emotion[index]) + "\\" + str(i) + ".JPEG")
 
             for i, validX in tqdm(enumerate(validSet),
                                   desc="Saving training data for \"" + emotion[index] + "\" class",
                                   total=len(trainSet)):
-                validX[0].save(os.path.join(path, "validate", emotion[index]) + "\\" + str(i) + ".JPEG")
+                image = im.fromarray(validX[0])
+                image.save(os.path.join(path, "validate", emotion[index]) + "\\" + str(i) + ".JPEG")
 
-            for i, testX in tqdm(enumerate(testSet), desc="Saving training data for \"" + emotion[index] + "\" class"):
-                testX[0].save(os.path.join(path, "test", emotion[index]) + "\\" + str(i) + ".JPEG",
-                                  total=len(trainSet))
+            for i, testX in tqdm(enumerate(testSet),
+                                 desc="Saving training data for \"" + emotion[index] + "\" class",
+                                 total=len(trainSet)):
+                image = im.fromarray(testX[0])
+                image.save(os.path.join(path, "test", emotion[index]) + "\\" + str(i) + ".JPEG")
 
             print('\nDone. Completed Saving Photos for ' + emotion[index])
 
