@@ -44,7 +44,12 @@ class genLinePlot:
         self.ylabel = ylabel
 
 
-def plot_confusion_matrix(confusion_matrix, CNN_name: str):
+def plot_confusion_matrix(confusion_matrix, CNN_name: str, norm = None):
+    if norm is not None:
+        for i in range(len(confusion_matrix)):
+            row_sum = np.sum(confusion_matrix[i])
+            for j in range(len(confusion_matrix[i])):
+                confusion_matrix[i][j] = float(confusion_matrix[i][j]) / float(row_sum)
     names = ["Afraid", "Angry", "Disgust", "Happy", "Neutral", "Sad", "Surprised"]
     df_cm = pd.DataFrame(confusion_matrix, names, names)
     plt.figure(figsize=(10, 7))
