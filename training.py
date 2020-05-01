@@ -1,3 +1,5 @@
+import shutil
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -5,9 +7,17 @@ import torch.optim as optim
 import PlotGraph as plt
 import torch.utils.data as data
 from tqdm import tqdm
+import numpy as np
 
 
 # A class that holds the necessary functions and variables to train the data
+def outputEmotions(listElement):
+    names = ["Afraid", "Angry", "Disgust", "Happy", "Neutral", "Sad", "Surprised"]
+
+    for i in range(len(names)):
+        print("\t" + names[i] + ": " + str(listElement[i]))
+
+
 class trainer:
     def __init__(self, epoch, batch_size, net, trainSet, validSet, testSet, device, lr=0.005):
         self.net = net
@@ -20,7 +30,7 @@ class trainer:
         self.epoch = epoch
 
         # Initialise the optimiser and the loss function that is being used
-        self.optimiser = optim.SGD(self.net.parameters(), lr=lr)
+        self.optimiser = optim.Adam(self.net.parameters(), lr=lr)
         self.loss_func = nn.CrossEntropyLoss()
 
         # Initialise the graphing classes that are being used
@@ -59,7 +69,7 @@ class trainer:
 
             return lossOut, accOut
 
-    def evaluateModel(self):
+    def evaluateModel(self, path, name):
         testCorrectDict = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
         predictedCount = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
         actualCount = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
@@ -96,17 +106,13 @@ class trainer:
             testAcc = testCorrect / count2
             testLoss = testSum / count
 
-            print(testCorrectDict)
-            print(predictedCount)
-            print(actualCount)
-
             for i in range(7):
                 if predictedCount[i] != 0:
                     testRecall[i] = round(testCorrectDict[i] / predictedCount[i], 3)
-                if testPrecision[i] != 0:
+                if actualCount[i] != 0:
                     testPrecision[i] = round(testCorrectDict[i] / actualCount[i], 3)
-                if predictedCount[i] != 0 and testPrecision[i] != 0:
-                    testF1Score[i] = 2 * ((testRecall[i]*testPrecision[i])/(testPrecision[i]+testRecall[i]))
+                if testPrecision[i] != 0 and testRecall[i] != 0:
+                    testF1Score[i] = 2 * ((testRecall[i] * testPrecision[i]) / (testPrecision[i] + testRecall[i]))
 
             print("""
             |-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-=-=-=-=-=-=-=-=-|
@@ -116,28 +122,38 @@ class trainer:
 
             print("Test Accuracy : \t" + str(testAcc))
             print("Test Loss :\t" + str(testLoss))
-            print("Test Recall :\t" + str(testRecall))
-            print("Test Precision :\t" + str(testPrecision))
-            print("Test f1 Score :\t" + str(testF1Score))
+            print("Test Recall :\t")
+            outputEmotions(testRecall)
+            print("Test Precision :\t")
+            outputEmotions(testPrecision)
+            print("Test f1 Score :\t")
+            outputEmotions(testF1Score)
             print("|-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-=-=-=-=-=-=-=-=-|")
             print("CONFUSION MATRIX")
 
         # Begin the confusion matrix analysis
-        empty = torch.zeros(7, 7, dtype=torch.int32)
+        empty = torch.zeros(7, 7, dtype=torch.float32)
         confusion_matrix = empty.numpy()
         for i in matrix_plot:
             predicted_emotion, actual_emotion = i
             confusion_matrix[predicted_emotion, actual_emotion] = confusion_matrix[
                                                                       predicted_emotion, actual_emotion] + 1
         print(confusion_matrix)
-        plt.plot_confusion_matrix(confusion_matrix, "TestClass")
 
-        plt.showPlot(self.pltLoss)
-        plt.showPlot(self.pltAcc)
+        plt.plot_confusion_matrix(confusion_matrix, name, save=True, path=path, norm=True)
 
-    def startTrain(self, load=False, fileName="default_model", saveFreq=20):
+        plt.showPlot(self.pltLoss, path=path, name=name + "-loss")
+        plt.showPlot(self.pltAcc, path=path, name=name + "-acc")
+
+        reshapedLoss = np.transpose(self.pltLoss.y)
+        reshapedAcc = np.transpose(self.pltAcc.y)
+
+        np.savetxt(path + "/" + name + "-loss.csv", reshapedLoss, delimiter=',')
+        np.savetxt(path + "/" + name + "-acc.csv", reshapedAcc, delimiter=',')
+
+    def startTrain(self, path, fileName="default_model", load=False, saveFreq=20):
         if load:
-            self.loadCheckpoint(fileName)
+            self.loadCheckpoint(path, fileName)
             print("\n LOADED IN A NETWORK CHECKPOINT :" + fileName)
 
         trainLoss = 0
@@ -162,12 +178,6 @@ class trainer:
                 loss.backward()
                 self.optimiser.step()
 
-                # torchtest.assert_vars_change(self.net,
-                #                              self.loss_func,
-                #                              self.optimiser,
-                #                              batch=[batchImage, batchLabel],
-                #                              device=self.device)
-
             trainLoss, trainAcc = self.trainingEval(5)
             validLoss, validAcc = self.trainingEval(5, train=False)
 
@@ -181,13 +191,13 @@ class trainer:
 
             # Saving a Model at certain intervals of epoch and at the final epoch
             if (e + 1) % saveFreq == 0 or e == (self.epoch - 1):
-                self.saveCheckpoint(e + 1, self.batch_size, fileName)
+                self.saveCheckpoint(path + "/" + fileName + ".pt")
                 print("CURRENT MODEL HAS BEEN SAVED AS :" + fileName)
 
-        self.evaluateModel()
+        self.evaluateModel(path, fileName)
 
     # Saves the progress to a fileName that was specified
-    def saveCheckpoint(self, fileName: str, save_dir = None):
+    def saveCheckpoint(self, fileName: str):
         checkpoint = {
             "model_save": self.net.state_dict(),
             "optimizer_save": self.optimiser.state_dict(),
@@ -197,18 +207,18 @@ class trainer:
             "graphData_save_Acc": [self.pltAcc.y, self.pltAcc.x]
         }
         torch.save(checkpoint, fileName)
-        if save_dir is not None:
-            shutil.copy(fileName, dst=save_dir)
 
     # Loads in the progress that was made
-    def loadCheckpoint(self, checkpoint_path: str):
-        load_checkpoint = torch.load(checkpoint_path)
+    def loadCheckpoint(self, checkpoint_path: str, checkpoint_name: str):
+        load_checkpoint = torch.load(checkpoint_path + "/" + checkpoint_name + ".pt")
 
         self.net.load_state_dict(load_checkpoint["model_save"])
         self.optimiser.load_state_dict(load_checkpoint["optimizer_save"])
-        self.pltLoss.x = load_checkpoint["model_save"][1]
-        self.pltLoss.y = load_checkpoint["model_save"][0]
-        self.pltAcc.x = load_checkpoint["model_save"][1]
-        self.pltAcc.y = load_checkpoint["model_save"][0]
-        self.batch_size = load_checkpoint["batchSize_save"]
-        self.epoch = load_checkpoint["epoch_save"]
+        self.pltLoss.x = load_checkpoint["graphData_save_Loss"][1]
+        self.pltLoss.y = load_checkpoint["graphData_save_Loss"][0]
+        self.pltAcc.x = load_checkpoint["graphData_save_Acc"][1]
+        self.pltAcc.y = load_checkpoint["graphData_save_Acc"][0]
+
+        print("\nPREVIOUS DATA: ")
+        print("BATCH-SIZE = " + str(load_checkpoint["batchSize_save"]))
+        print("EPOCHS = " + str(load_checkpoint["epoch_save"]))

@@ -22,13 +22,14 @@ import VGG16
 EPOCHS = 50
 BATCH_SIZE = 64
 IMAGE_SIZE = 64
-CROP_SIZE = 64
 REBUILD_DATA = False
 DEVICE = None
 TRAIN_PERCENT = 0.7
 DATA_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\data"  # FILE LOCATION OF THE DATA
-SAVE_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\edited"  # WHERE YOU WANT TO SAVE THE AUGMENTED DATA
+SAVE_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\edited"  #
 LOAD_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\edited"
+MODEL_SAVE = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\Results\Unedited FER\VGG"
+MODEL_NAME = "VGG13_ADAM_LR_0.001"
 
 # Initialising the device
 if torch.cuda.is_available():
@@ -49,7 +50,7 @@ if REBUILD_DATA:
     rawData.save(SAVE_LOCATION, TRAIN_PERCENT)
     LOAD_LOCATION = SAVE_LOCATION
 
-transform = transforms.Compose([transforms.Resize(64),
+transform = transforms.Compose([transforms.Resize(IMAGE_SIZE),
                                 transforms.Grayscale(1),
                                 transforms.RandomAffine(10),
                                 transforms.ToTensor()])
@@ -66,6 +67,9 @@ print("\nIMAGES HAS BEEN LOADED IN THE PROGRAM")
 
 net = VGG16.CustomVGG13().to(DEVICE)
 
-trainBot = trainer(net, trainSet, validSet, testSet, DEVICE)
+trainBot = trainer(EPOCHS, BATCH_SIZE, net, trainSet, validSet, testSet, DEVICE, lr=0.001)
 
-trainBot.startTrain(EPOCHS, BATCH_SIZE)
+trainBot.startTrain(MODEL_SAVE, MODEL_NAME, load=False)
+
+#trainBot.loadCheckpoint(MODEL_SAVE, MODEL_NAME)
+#trainBot.evaluateModel(MODEL_SAVE, MODEL_NAME)
