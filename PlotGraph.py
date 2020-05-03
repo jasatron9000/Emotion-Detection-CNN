@@ -51,7 +51,7 @@ def plot_confusion_matrix(confusion_matrix, CNN_name: str):
     sn.set(font_scale=1.4)  # for label size
     sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}, cmap="BuPu")  # font size
     ax = plt.axes()
-    ax.set_title(CNN_name + 'Emotion Confusion Matrix')
+    ax.set_title(CNN_name + ' Emotion Confusion Matrix')
     plt.xlabel('Actual Emotion')
     plt.ylabel('Predicted Emotion')
     plt.show()

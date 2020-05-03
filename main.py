@@ -17,18 +17,20 @@ sys.path.insert(1, 'models')
 import AlexNet as AN
 import SqueezeNet as SN
 import VGG16
+import ResNet3418 as RN
 
 # Constants
-EPOCHS = 50
+EPOCHS = 100
 BATCH_SIZE = 64
 IMAGE_SIZE = 64
-CROP_SIZE = 64
 REBUILD_DATA = False
 DEVICE = None
 TRAIN_PERCENT = 0.7
-DATA_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\data"  # FILE LOCATION OF THE DATA
-SAVE_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\edited"  # WHERE YOU WANT TO SAVE THE AUGMENTED DATA
+DATA_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\Data\KDEF Updated"  # FILE LOCATION OF THE DATA
+SAVE_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\edited"  #
 LOAD_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\edited"
+MODEL_SAVE = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\Results\Edited FER\ResNet\BATCH-64 ResNet34_ADAM_LR_0.001_64x64"
+MODEL_NAME = "ResNet34_ADAM_LR_0.001_64x64 "
 
 # Initialising the device
 if torch.cuda.is_available():
@@ -49,23 +51,46 @@ if REBUILD_DATA:
     rawData.save(SAVE_LOCATION, TRAIN_PERCENT)
     LOAD_LOCATION = SAVE_LOCATION
 
-transform = transforms.Compose([transforms.Resize(64),
-                                transforms.Grayscale(1),
+transformAugmented = transforms.Compose([transforms.Resize(int(IMAGE_SIZE*1.1)),
+                                         transforms.RandomCrop(IMAGE_SIZE),
+                                         transforms.Grayscale(1),
+                                         transforms.RandomHorizontalFlip(),
+                                         transforms.RandomAffine(10),
+                                         transforms.ToTensor()])
+
+transform = transforms.Compose([transforms.Resize(IMAGE_SIZE),
                                 transforms.RandomAffine(10),
+                                transforms.RandomHorizontalFlip(),
                                 transforms.ToTensor()])
 
-train = ImageFolder(LOAD_LOCATION + "\\train", transform=transform)
-valid = ImageFolder(LOAD_LOCATION + "\\validate", transform=transform)
-test = ImageFolder(LOAD_LOCATION + "\\test", transform=transform)
+train = ImageFolder(LOAD_LOCATION + "\\train", transform=transformAugmented)
+valid = ImageFolder(LOAD_LOCATION + "\\validate", transform=transformAugmented)
+test = ImageFolder(LOAD_LOCATION + "\\test", transform=transformAugmented)
 print("\nIMAGES HAS BEEN RETRIEVED")
+
+# classWeights = torch.zeros((1, 7))
+#
+# for _, label in train:
+#     classWeights[0][label] += 1
+#
+# for _, label in valid:
+#     classWeights[0][label] += 1
+#
+# for _, label in test:
+#     classWeights[0][label] += 1
+#
+# print(classWeights)
 
 trainSet = data.DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
 validSet = data.DataLoader(valid, batch_size=BATCH_SIZE, shuffle=True)
 testSet = data.DataLoader(test, batch_size=BATCH_SIZE, shuffle=True)
 print("\nIMAGES HAS BEEN LOADED IN THE PROGRAM")
 
-net = VGG16.CustomVGG13().to(DEVICE)
+net = RN.ResNet30(1).to(DEVICE)
 
-trainBot = trainer(net, trainSet, validSet, testSet, DEVICE)
+trainBot = trainer(EPOCHS, BATCH_SIZE, net, trainSet, validSet, testSet, DEVICE, lr=0.001)
 
-trainBot.startTrain(EPOCHS, BATCH_SIZE)
+trainBot.startTrain(MODEL_SAVE, MODEL_NAME, load=False)
+
+# trainBot.loadCheckpoint(MODEL_SAVE, MODEL_NAME)
+# trainBot.evaluateModel(MODEL_SAVE, MODEL_NAME)
