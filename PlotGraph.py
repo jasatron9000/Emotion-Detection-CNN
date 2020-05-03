@@ -7,7 +7,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sn
-
+import numpy as np
 
 # genLinePlot -> a class that holds the information that a single plot needs
 # Params:
@@ -44,7 +44,16 @@ class genLinePlot:
         self.ylabel = ylabel
 
 
-def plot_confusion_matrix(confusion_matrix, CNN_name: str):
+def plot_confusion_matrix(confusion_matrix, CNN_name: str, save=False, path=None, norm = None):
+    if norm is not None:
+        confusion_matrix = np.transpose(confusion_matrix)
+
+        for i in range(len(confusion_matrix)):
+            row_sum = np.sum(confusion_matrix[i])
+            for j in range(len(confusion_matrix[i])):
+                if row_sum != 0:
+                    confusion_matrix[i][j] = float(confusion_matrix[i][j]) / float(row_sum)
+        confusion_matrix = np.transpose(confusion_matrix)
     names = ["Afraid", "Angry", "Disgust", "Happy", "Neutral", "Sad", "Surprised"]
     df_cm = pd.DataFrame(confusion_matrix, names, names)
     plt.figure(figsize=(10, 7))
@@ -54,6 +63,10 @@ def plot_confusion_matrix(confusion_matrix, CNN_name: str):
     ax.set_title(CNN_name + ' Emotion Confusion Matrix')
     plt.xlabel('Actual Emotion')
     plt.ylabel('Predicted Emotion')
+
+    if save:
+        plt.savefig(path + "/" + CNN_name + "-cm.png")
+
     plt.show()
 
 
@@ -73,7 +86,7 @@ def insertY(plotArray: genLinePlot, *ny):
             plotArray.x[i].append(len(plotArray.y[i]))
 
 
-def showPlot(*plots: genLinePlot):
+def showPlot(*plots: genLinePlot, path=None, name="default_graph"):
     # create figure
     fig = plt.figure()
 
@@ -91,4 +104,9 @@ def showPlot(*plots: genLinePlot):
                 line.set_label(plot.legendList[pltNum])
             sPlt.legend()
 
+    if path is not None:
+        plt.savefig(path + "/" + name + ".png")
+
     plt.show()
+
+
