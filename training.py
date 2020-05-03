@@ -19,7 +19,7 @@ def outputEmotions(listElement):
 
 
 class trainer:
-    def __init__(self, epoch, batch_size, net, trainSet, validSet, testSet, device, lr=0.005):
+    def __init__(self, epoch, batch_size, net, trainSet, validSet, testSet, device, lr=0.005, weights=None):
         self.net = net
         self.validSet = validSet
         self.trainSet = trainSet
@@ -31,7 +31,11 @@ class trainer:
 
         # Initialise the optimiser and the loss function that is being used
         self.optimiser = optim.Adam(self.net.parameters(), lr=lr)
-        self.loss_func = nn.CrossEntropyLoss()
+        if weights is not None:
+            self.loss_func = nn.CrossEntropyLoss(weight=weights)
+        else:
+            self.loss_func = nn.CrossEntropyLoss()
+
 
         # Initialise the graphing classes that are being used
         self.pltLoss = plt.genLinePlot(title="Loss Analysis", ylabel="Loss", xlabel="Epoch", numOfLines=2,

@@ -46,7 +46,6 @@ class SqueezeNet(nn.Module):
         x = self.fire3(x)
         x = F.max_pool2d(x, kernel_size=3, stride=2)
         x = self.fire4(x)
-        x = self.fire5(x)
         x = self.fire6(x)
         x = self.fire7(x)
         x = F.max_pool2d(x, kernel_size=3, stride=2)
