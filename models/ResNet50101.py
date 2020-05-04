@@ -28,15 +28,15 @@ class bottleNeck_block(nn.Module):
                                stride=1, padding=0)
         self.BN3 = nn.BatchNorm2d(map_back_channels * bottleNeck_block.blk_expand)
 
-        # If a change_reidual_shape was given as a input then it means the map_back_channels
+        # If a change_residual_shape was given as a input then it means the map_back_channels
         # has been changed(going into the next ResNet layer)
         #
-        # Therefore the sequencial for changing the residual to match the current output(x)
+        # Therefore the Sequential for changing the residual to match the current output(x)
         # must be updated
         self.change_residual_shape = change_residual_shape
 
     def forward(self, x):
-        # The residul will be assigned at the start of each block to then be added at the end
+        # The residual will be assigned at the start of each block to then be added at the end
         Residual = x
 
         # Go through the bottleNeck_block conv layers
@@ -63,12 +63,12 @@ class bottleNeck_block(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, bottleNeck_block, layers, image_channels, num_classes):
+    def __init__(self, bottleNeck_block, layers, num_classes):
         super(ResNet, self).__init__()
 
         # The initial convolution layer before the ResNet layers thats made up of the bottleNeck_blocks
         self.in_channels = 64
-        self.conv1 = nn.Conv2d(image_channels, 64, kernel_size=7, stride=2, padding=3)
+        self.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3)
         self.BN1 = nn.BatchNorm2d(64)
 
         # nn.functions were not used as resnet uses specific parameters for pooling, therefore
@@ -76,7 +76,7 @@ class ResNet(nn.Module):
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-        # Defining the Resnet layers that will call to a function that will create a seqencial(pytorch function)
+        # Defining the Resnet layers that will call to a function that will create a Sequential(pytorch function)
         # that will string together the right number of bottleNeck_blocks depending on which version of resnet
         # that is being used is.
         #
@@ -86,7 +86,7 @@ class ResNet(nn.Module):
         # 64 -> 128 -> 256 -> 521
         #
         # The stride is hard coded to 2 in the make_layer function as it is only 1 initially for the first layer
-        # The stride will be used in the very first bottleNeck_block in a layer to reduse the dimension,
+        # The stride will be used in the very first bottleNeck_block in a layer to reduce the dimension,
         # this will happen throughout the network.
         # Inside bottleNeck_block: stride: 2 -> 1 -> 1
         self.resLayer1 = self.make_layer(bottleNeck_block, layers[0], map_back_channels=64, stride=1)
@@ -108,7 +108,7 @@ class ResNet(nn.Module):
 
         # Defining the conv and batch layer that will be used to change the dimension of the residual
         #
-        # This will be in a pytorch sequencial and assigned to change_residual_shape when a change in
+        # This will be in a pytorch Sequential and assigned to change_residual_shape when a change in
         # map_back_channels is detected
         self.resConv = nn.Conv2d(self.in_channels, map_back_channels * bottleNeck_block.blk_expand, kernel_size=1,
                                  stride=stride)
@@ -121,7 +121,7 @@ class ResNet(nn.Module):
             change_residual_shape = nn.Sequential(self.resConv,
                                                   self.resBatch)
 
-        # A intial block will be appended to the the list first as that block will have the stride value that is
+        # A initial block will be appended to the the list first as that block will have the stride value that is
         # giving when making the layers, which is in charge of decreasing the the dimension on the feature maps(by half)
         layer_blocks.append(bottleNeck_block(self.in_channels, map_back_channels, change_residual_shape, stride))
 
@@ -133,16 +133,16 @@ class ResNet(nn.Module):
         for i in range(num_blocks - 1):
             layer_blocks.append(bottleNeck_block(self.in_channels, map_back_channels))
 
-        # Finally returns a pytorch Seqential that strings togther all the bottleNeck blocks together
+        # Finally returns a pytorch Sequential that strings together all the bottleNeck blocks together
         return nn.Sequential(*layer_blocks)
 
     def forward(self, x):
-        # Going through inital layer BEFORE using the ResNet layers that are made up of bottleneck blocks
+        # Going through initial layer BEFORE using the ResNet layers that are made up of bottleneck blocks
         x = self.conv1(x)
         x = F.relu(self.BN1(x))
         x = self.maxpool(x)
 
-        # Going through the Resnet layers
+        # Going through the ResNet layers
         x = self.resLayer1(x)
         x = self.resLayer2(x)
         x = self.resLayer3(x)
@@ -158,14 +158,14 @@ class ResNet(nn.Module):
 #------------------------------------- ResNet selection -------------------------------------------#
 
 # img_channel: 1 (grayscale) or 3 (RGB)
-def ResNet50(img_channel):
+def ResNet50():
     num_classes = 7
-    return ResNet(bottleNeck_block, [3, 4, 6, 3], img_channel, num_classes)
+    return ResNet(bottleNeck_block, [3, 4, 6, 3], num_classes)
 
-def ResNet101(img_channel):
+def ResNet101():
     num_classes = 7
-    return ResNet(block, [3, 4, 23, 3], img_channel, num_classes)
+    return ResNet(bottleNeck_block, [3, 4, 23, 3], num_classes)
 
-def ResNet152(img_channel):
+def ResNet152():
     num_classes = 7
-    return ResNet(block, [3, 8, 36, 3], img_channel, num_classes)
+    return ResNet(bottleNeck_block, [3, 8, 36, 3], num_classes)

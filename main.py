@@ -1,3 +1,6 @@
+import os
+from os import path
+
 import torch
 from image_processing import emotions
 from training import trainer
@@ -26,11 +29,29 @@ IMAGE_SIZE = 64
 REBUILD_DATA = False
 DEVICE = None
 TRAIN_PERCENT = 0.7
+lr = 0.001
+
+if EPOCHS or BATCH_SIZE or IMAGE_SIZE or TRAIN_PERCENT or lr < 0:
+  raise Exception("Input is below zero, please check the following: EPOCHS, BATCH_SIZE, IMAGE_SIZE, TRAIN_PERCENT, lr")
+
 DATA_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\Data\KDEF Updated"  # FILE LOCATION OF THE DATA
 SAVE_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\edited"  #
 LOAD_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\edited"
 MODEL_SAVE = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\Results\Edited FER\ResNet\With Class Weights"
 MODEL_NAME = "ResNet18_ADAM_LR_0.001_64x64 DROPOUT "
+
+Paths = {
+    0 : [DATA_LOCATION, "Data Location"],
+    1 : [SAVE_LOCATION, "Save Location"],
+    2 : [LOAD_LOCATION, "Load Location"],
+    3 : [MODEL_SAVE, "Model Save"]
+}
+
+for i in Paths:
+    if path.exists(Paths[i][0]):
+        print(Paths[i][1] + " is set!")
+    if path.exists(Paths[i][0]) == False:
+        raise Exception(Paths[i][1] + ": Yikes! Path does not exist :(")
 
 # Initialising the device
 if torch.cuda.is_available():
@@ -90,7 +111,10 @@ print("\nIMAGES HAS BEEN LOADED IN THE PROGRAM")
 
 net = RN.ResNet30(1).to(DEVICE)
 
-trainBot = trainer(EPOCHS, BATCH_SIZE, net, trainSet, validSet, testSet, DEVICE, lr=0.001, weights=classWeights)
+
+if EPOCHS or BATCH_SIZE or lr < 0:
+  raise Exception("Input is below zero, please check the following: EPOCHS, BATCH_SIZE, lr")
+trainBot = trainer(EPOCHS, BATCH_SIZE, net, trainSet, validSet, testSet, DEVICE, lr, weights=classWeights)
 
 trainBot.startTrain(MODEL_SAVE, MODEL_NAME, load=False)
 
