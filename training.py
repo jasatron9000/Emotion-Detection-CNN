@@ -112,9 +112,9 @@ class trainer:
 
             for i in range(7):
                 if predictedCount[i] != 0:
-                    testRecall[i] = round(testCorrectDict[i] / predictedCount[i], 3)
+                    testPrecision[i] = round(testCorrectDict[i] / predictedCount[i], 3)
                 if actualCount[i] != 0:
-                    testPrecision[i] = round(testCorrectDict[i] / actualCount[i], 3)
+                    testRecall[i] = round(testCorrectDict[i] / actualCount[i], 3)
                 if testPrecision[i] != 0 and testRecall[i] != 0:
                     testF1Score[i] = 2 * ((testRecall[i] * testPrecision[i]) / (testPrecision[i] + testRecall[i]))
 

@@ -29,8 +29,8 @@ TRAIN_PERCENT = 0.7
 DATA_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\Data\KDEF Updated"  # FILE LOCATION OF THE DATA
 SAVE_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\edited"  #
 LOAD_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\edited"
-MODEL_SAVE = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\Results\Edited FER\ResNet\BATCH-64 ResNet34_ADAM_LR_0.001_64x64"
-MODEL_NAME = "ResNet34_ADAM_LR_0.001_64x64 "
+MODEL_SAVE = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\Results\Edited FER\ResNet\With Class Weights"
+MODEL_NAME = "ResNet18_ADAM_LR_0.001_64x64 DROPOUT "
 
 # Initialising the device
 if torch.cuda.is_available():
@@ -68,18 +68,20 @@ valid = ImageFolder(LOAD_LOCATION + "\\validate", transform=transformAugmented)
 test = ImageFolder(LOAD_LOCATION + "\\test", transform=transformAugmented)
 print("\nIMAGES HAS BEEN RETRIEVED")
 
-# classWeights = torch.zeros((1, 7))
-#
-# for _, label in train:
-#     classWeights[0][label] += 1
-#
-# for _, label in valid:
-#     classWeights[0][label] += 1
-#
-# for _, label in test:
-#     classWeights[0][label] += 1
-#
-# print(classWeights)
+classWeights = torch.zeros((1, 7))
+
+for _, label in train:
+    classWeights[0][label] += 1
+
+for _, label in valid:
+    classWeights[0][label] += 1
+
+for _, label in test:
+    classWeights[0][label] += 1
+
+classWeights = 1/classWeights
+classWeights = classWeights.to(DEVICE)
+print(classWeights)
 
 trainSet = data.DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
 validSet = data.DataLoader(valid, batch_size=BATCH_SIZE, shuffle=True)
@@ -88,7 +90,7 @@ print("\nIMAGES HAS BEEN LOADED IN THE PROGRAM")
 
 net = RN.ResNet30(1).to(DEVICE)
 
-trainBot = trainer(EPOCHS, BATCH_SIZE, net, trainSet, validSet, testSet, DEVICE, lr=0.001)
+trainBot = trainer(EPOCHS, BATCH_SIZE, net, trainSet, validSet, testSet, DEVICE, lr=0.001, weights=classWeights)
 
 trainBot.startTrain(MODEL_SAVE, MODEL_NAME, load=False)
 
