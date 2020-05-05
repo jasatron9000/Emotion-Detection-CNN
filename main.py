@@ -1,59 +1,56 @@
-import os
-from os import path
+# MAIN
+# =================================================================================================================
+# The task of this file is to allow a user to use a custom dataset and train a available model easier by only
+# inserting in the changeable parameters
+# =================================================================================================================
 
+# Imports needed for the following code to work
 import torch
 from image_processing import emotions
 from training import trainer
 import torch.utils.data as data
-
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import transforms
-import time
-from sklearn import svm, datasets
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import plot_confusion_matrix
-
 import sys
-
 sys.path.insert(1, 'models')
 
+
+# ===================================== Import Architectures =====================================
+
+# Imports needed for the following code to work
 import AlexNet as AN
 import SqueezeNet as SN
 import VGG16
 import ResNet3418 as RN
 
+
+# ===================================== Input user parameters =====================================
+
 # Constants
 EPOCHS = 100
 BATCH_SIZE = 64
 IMAGE_SIZE = 64
-REBUILD_DATA = False
-DEVICE = None
 TRAIN_PERCENT = 0.7
 lr = 0.001
 
-if EPOCHS or BATCH_SIZE or IMAGE_SIZE or TRAIN_PERCENT or lr < 0:
-  raise Exception("Input is below zero, please check the following: EPOCHS, BATCH_SIZE, IMAGE_SIZE, TRAIN_PERCENT, lr")
+# Process the images from scratch
+REBUILD_DATA = False
+DEVICE = None
 
-DATA_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\Data\KDEF Updated"  # FILE LOCATION OF THE DATA
-SAVE_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\edited"  #
-LOAD_LOCATION = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\edited"
-MODEL_SAVE = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\Results\Edited FER\ResNet\With Class Weights"
+# Path locations on local device
+DATA_LOCATION = r"D:\2020\COMPSYS 302\picturs\original\sorted_emotion"  # FILE LOCATION OF THE DATA
+SAVE_LOCATION = r"D:\2020\COMPSYS 302\CNNs"
+MODEL_SAVE = r"D:\2020\COMPSYS 302\CNNs"
 MODEL_NAME = "ResNet18_ADAM_LR_0.001_64x64 DROPOUT "
 
-Paths = {
-    0 : [DATA_LOCATION, "Data Location"],
-    1 : [SAVE_LOCATION, "Save Location"],
-    2 : [LOAD_LOCATION, "Load Location"],
-    3 : [MODEL_SAVE, "Model Save"]
-}
+# Network selection + to train or not
+net = RN.ResNet18().to(DEVICE)
+Train = True
 
-for i in Paths:
-    if path.exists(Paths[i][0]):
-        print(Paths[i][1] + " is set!")
-    if path.exists(Paths[i][0]) == False:
-        raise Exception(Paths[i][1] + ": Yikes! Path does not exist :(")
 
-# Initialising the device
+# =========================================== Starts the code ===========================================
+
+# Initialising the device to be used for making the CNN calculations
 if torch.cuda.is_available():
     DEVICE = torch.device("cuda:0")
     DEVICE_STATUS = True
@@ -63,15 +60,13 @@ else:
     DEVICE_STATUS = False
     print("\nUsing the CPU")
 
-# Retrieve and Augment Data
+# Create the data and save
 if REBUILD_DATA:
-    rawData = emotions(IMAGE_SIZE)
+    rawData = emotions()
     rawData.make_training_data(DATA_LOCATION)
-    # rawData.ImageFlip()
-    # rawData.RandomCropData(5, CROP_SIZE, CROP_SIZE)
     rawData.save(SAVE_LOCATION, TRAIN_PERCENT)
-    LOAD_LOCATION = SAVE_LOCATION
 
+# Image augmentation is applied to the processed images
 transformAugmented = transforms.Compose([transforms.Resize(int(IMAGE_SIZE*1.1)),
                                          transforms.RandomCrop(IMAGE_SIZE),
                                          transforms.Grayscale(1),
@@ -84,13 +79,14 @@ transform = transforms.Compose([transforms.Resize(IMAGE_SIZE),
                                 transforms.RandomHorizontalFlip(),
                                 transforms.ToTensor()])
 
-train = ImageFolder(LOAD_LOCATION + "\\train", transform=transformAugmented)
-valid = ImageFolder(LOAD_LOCATION + "\\validate", transform=transformAugmented)
-test = ImageFolder(LOAD_LOCATION + "\\test", transform=transformAugmented)
+# Initialize the datasets used for developing the CNN
+train = ImageFolder(SAVE_LOCATION + "\\train", transform=transformAugmented)
+valid = ImageFolder(SAVE_LOCATION + "\\validate", transform=transformAugmented)
+test = ImageFolder(SAVE_LOCATION + "\\test", transform=transformAugmented)
 print("\nIMAGES HAS BEEN RETRIEVED")
 
+# Initialize initial weights for network
 classWeights = torch.zeros((1, 7))
-
 for _, label in train:
     classWeights[0][label] += 1
 
@@ -104,19 +100,16 @@ classWeights = 1/classWeights
 classWeights = classWeights.to(DEVICE)
 print(classWeights)
 
+# Load the processed images that are ready for calculation into the program
 trainSet = data.DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
 validSet = data.DataLoader(valid, batch_size=BATCH_SIZE, shuffle=True)
 testSet = data.DataLoader(test, batch_size=BATCH_SIZE, shuffle=True)
 print("\nIMAGES HAS BEEN LOADED IN THE PROGRAM")
 
-net = RN.ResNet30(1).to(DEVICE)
-
-
-if EPOCHS or BATCH_SIZE or lr < 0:
-  raise Exception("Input is below zero, please check the following: EPOCHS, BATCH_SIZE, lr")
+# Initialize the trainer with the necessary parameters
 trainBot = trainer(EPOCHS, BATCH_SIZE, net, trainSet, validSet, testSet, DEVICE, lr, weights=classWeights)
-
-trainBot.startTrain(MODEL_SAVE, MODEL_NAME, load=False)
-
-# trainBot.loadCheckpoint(MODEL_SAVE, MODEL_NAME)
-# trainBot.evaluateModel(MODEL_SAVE, MODEL_NAME)
+if Train:
+    trainBot.startTrain(MODEL_SAVE, MODEL_NAME, load=False)
+else:
+    trainBot.loadCheckpoint(MODEL_SAVE, MODEL_NAME)
+    trainBot.evaluateModel(MODEL_SAVE, MODEL_NAME)

@@ -13,7 +13,7 @@ class NishNet(nn.Module):
 
         # Defining the convolution and batch normalization layers
         #
-        # There are eight convolution layers and four batch normalisation layer in total
+        # There are 8 convolution layers and 4 batch normalisation layer in total
         self.conv1 = nn.Conv2d(1, output_features, 3, padding=(1, 1))
         self.conv2 = nn.Conv2d(output_features, output_features, 3, padding=(1, 1))
         self.BN1 = nn.BatchNorm2d(output_features)

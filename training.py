@@ -1,25 +1,58 @@
-import shutil
+# TRAINING
+# =================================================================================================================
+# This file contains functions functions that allow the user to train and save a model by storing all the parameters
+# into a class called trainer
+# =================================================================================================================
 
+
+# Imports needed for the following code to work
+from os import path
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 import PlotGraph as plt
-import torch.utils.data as data
 from tqdm import tqdm
 import numpy as np
 
 
-# A class that holds the necessary functions and variables to train the data
+
 def outputEmotions(listElement):
     names = ["Afraid", "Angry", "Disgust", "Happy", "Neutral", "Sad", "Surprised"]
 
     for i in range(len(names)):
         print("\t" + names[i] + ": " + str(listElement[i]))
 
-
+# trainer -> a class that holds necessary functions/dataset/parameters to train the model and save it to a local device
+# Params:
+#   -epoch        -> integer input: the amount of times that the network will loop through the entire training dataset
+#   -batch_size   -> integer input: the number of images that will be passed into the network at one time
+#   -net          -> class input: The chosen network class that will be trained
+#   -trainSet     -> list input: training dataset that will be used to train the chosen model
+#   -validSet     -> list input: validation dataset that will be used to fine tune the chosen model
+#   -testSet      -> list input: testing dataset that will be used for accuracy calculations and plot confusion matrix
+#   -device       -> Determines if the calculation will be done on the cpu or gpu in the local device
 class trainer:
-    def __init__(self, epoch, batch_size, net, trainSet, validSet, testSet, device, lr=0.005, weights=None):
+    def __init__(self, epoch: int, batch_size: int, net, trainSet, validSet, testSet, device, lr=0.005, weights=None):
+
+# ========================================= Detect input errors ======================================================
+        integers = [epoch, batch_size]
+        for i in integers:
+            if not isinstance(i, int):
+                raise Exception("Invalid input, please check that [EPOCHS] and [BATCH_SIZE] are integers")
+
+        check_list = [trainSet, validSet, testSet]
+        check = []
+        for i in check_list:
+            it = iter(i)
+            image, label = next(it)
+            check.append(net(image))
+        if check[0].shape == check[1].shape == check[2].shape:
+            pass
+        else:
+            raise Exception("Datasets do not match with each other using current network, please check if:"
+                            "[trainSet], [validSet], [testSet] match with each other for ", str(net))
+# =====================================================================================================================
+
         self.net = net
         self.validSet = validSet
         self.trainSet = trainSet
@@ -43,6 +76,11 @@ class trainer:
         self.pltAcc = plt.genLinePlot(title="Accuracy Analysis", ylabel="Accuracy", xlabel="Epoch", numOfLines=2,
                                       legendList=["train", "test"])
 
+    # trainingEval -> A function that calculates and returns the loss and accuracy at each epoch
+    # Params:
+    #   -iterations -> integer input: The number of batchs that will be used to compute loss anc accuracy
+    #   -train      -> boolean input: determines whether or not it is calculating loss and accuracy for train or
+    #                  validation datasets
     def trainingEval(self, iterations, train=True):
         with torch.no_grad():
             sumLoss = 0
@@ -73,7 +111,11 @@ class trainer:
 
             return lossOut, accOut
 
-    def evaluateModel(self, path, name):
+    # evaluateModel -> A function that calculates and returns the loss and accuracy at the end of the training process
+    # Params:
+    #   -path  -> string input: Location of where the results will be saved to be plotted for later
+    #   -name  -> string input: name for the title of the confusion matrix as well as filename for the results
+    def evaluateModel(self, path: str, name: str):
         testCorrectDict = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
         predictedCount = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
         actualCount = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
@@ -87,7 +129,11 @@ class trainer:
         count2 = 0
         # Test set loop process / Retrieves the average loss, accuracy, recall, precision and f1 score
         with torch.no_grad():
-            for dataTest in tqdm(self.testSet, desc="Calculating Testing Accuracy", position=0, leave=True):
+            for dataTest in tqdm(self.testSet,
+                                 desc="Calculating Testing Accuracy",
+                                 position=0,
+                                 leave=True):
+
                 testImage, testLabel = dataTest
                 testImage = testImage.to(self.device)
                 testLabel = testLabel.to(self.device)
@@ -155,9 +201,25 @@ class trainer:
         np.savetxt(path + "/" + name + "-loss.csv", reshapedLoss, delimiter=',')
         np.savetxt(path + "/" + name + "-acc.csv", reshapedAcc, delimiter=',')
 
-    def startTrain(self, path, fileName="default_model", load=False, saveFreq=20):
+
+    # startTrain -> A function that trains network by looping through the specifide numbero of epochs and batchs
+    # Params:
+    #   -Path      -> string input: Location of where the results will be saved to be plotted for later
+    #   -FileName  -> string input: file name to load from and save the model for flexible training
+    #   -load      -> boolean input: user can decide to load an existing model to continue training or start again
+    #   -saveFreq  -> number of epochs to be iterated before triggering a save
+    def startTrain(self, Path, fileName="default_model", load=False, saveFreq=20):
+
+# ========================================= Detect input errors ================================================
+        if (not path.exists(Path)) or (not isinstance(Path, str)):
+            raise Exception("Yikes! " + "[" + Path + "]" + " Path does not exist :(")
+
+        if not isinstance(fileName, str):
+            raise Exception("Invalid type, please make sure [fileName] is a string type")
+# ==============================================================================================================
+
         if load:
-            self.loadCheckpoint(path, fileName)
+            self.loadCheckpoint(Path, fileName)
             print("\n LOADED IN A NETWORK CHECKPOINT :" + fileName)
 
         trainLoss = 0
@@ -168,8 +230,10 @@ class trainer:
         # Start the iteration process
         for e in range(self.epoch):
             lastLoss = 0
-            for idx, trainingData in tqdm(enumerate(self.trainSet), desc="EPOCH " + str(e + 1) + "/" + str(self.epoch),
-                                          position=0, leave=True, total=len(self.trainSet)):
+            for idx, trainingData in tqdm(enumerate(self.trainSet),
+                                          desc="EPOCH " + str(e + 1) + "/" + str(self.epoch),
+                                          total=len(self.trainSet)):
+
                 batchImage, batchLabel = trainingData
                 batchImage = batchImage.to(self.device)
                 batchLabel = batchLabel.to(self.device)
@@ -195,12 +259,14 @@ class trainer:
 
             # Saving a Model at certain intervals of epoch and at the final epoch
             if (e + 1) % saveFreq == 0 or e == (self.epoch - 1):
-                self.saveCheckpoint(path + "/" + fileName + ".pt")
+                self.saveCheckpoint(Path + "/" + fileName + ".pt")
                 print("CURRENT MODEL HAS BEEN SAVED AS :" + fileName)
 
-        self.evaluateModel(path, fileName)
+        self.evaluateModel(Path, fileName)
 
-    # Saves the progress to a fileName that was specified
+    # saveCheckpoint -> A function that saves the current state of a model and it's results
+    # Params:
+    #   -fileName      -> string input: Location of where the results will be saved to
     def saveCheckpoint(self, fileName: str):
         checkpoint = {
             "model_save": self.net.state_dict(),
@@ -212,7 +278,10 @@ class trainer:
         }
         torch.save(checkpoint, fileName)
 
-    # Loads in the progress that was made
+    # loadCheckpoint -> A function that loads back a state of a model that was saved previously from a file location
+    # Params:
+    #   -checkpoint_path  -> string input: Location of where the saved checkpoint is
+    #   -checkpoint_name  -> string input: name of the saved file
     def loadCheckpoint(self, checkpoint_path: str, checkpoint_name: str):
         load_checkpoint = torch.load(checkpoint_path + "/" + checkpoint_name + ".pt")
 

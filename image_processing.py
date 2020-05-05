@@ -1,25 +1,19 @@
+# IMAGE PROCESSING
+# =================================================================================================================
+# This file contains functions functions that allow the user process a set of custom image dataset to be loaded
+# into the CNN for training
+# =================================================================================================================
+
+# Imports needed for the following code to work
 import os
+from os import path
 from PIL import Image as im
 from tqdm import tqdm
 import numpy as np
-import torchvision.transforms.functional as transforms
 import random
-import torch
 
-
-def randomCrop(img, width, height):
-    prevWidth, prevHeight = img.size
-
-    x = random.randint(0, prevWidth - width)
-    y = random.randint(0, prevHeight - height)
-
-    # print(x, y, width, height)
-    cropped = transforms.crop(img, y, x, width, height)
-    return cropped
-
-    # RandomCrop -> This method randomly crops every image 'amount' times and outputs them as a new
-
-
+# emotions -> A class that holds necessary functions and dataset that will be used to train the specifide
+#             Also initializes a list which will hold the processed dataset
 class emotions:
     #  a counter for each class to see how many images has been processed
     afraid_count = 0
@@ -30,11 +24,21 @@ class emotions:
     sad_count = 0
     surprised_count = 0
 
-    def __init__(self, imgSize):
-        self.imgSize = imgSize
+    def __init__(self):
         self.training_data = []
 
-    def make_training_data(self, imgLocation: str, colour=True):
+    # make_training_data -> A function that will go through all the image within ready sorted folders and append them
+    #                       to a list for augmentation and seperation later on
+    # Params:
+    #   -imgLocation -> string input: path location of where the sorted pictures are
+    def make_training_data(self, imgLocation: str):
+# ---------------------------------------- Detect input errors ----------------------------------------------------#
+        if (not path.exists(imgLocation)) or (not isinstance(imgLocation, str)):
+            raise Exception("Yikes! " + "[" + imgLocation + "]" + " Path does not exist :(")
+# -----------------------------------------------------------------------------------------------------------------#
+
+
+
         random.seed(9001)
 
         # the location of the image files corresponding to class
@@ -54,16 +58,6 @@ class emotions:
                 try:
                     path = emotion + "/" + f
                     image = im.open(path)
-                    # width, height = image.size
-
-                    # left = (width - width) / 2
-                    # top = (height - width) / 2
-                    # right = (width + width) / 2
-                    # bottom = (height + width) / 2
-
-                    # image = image.crop((left, top, right, bottom))
-                    # image = image.resize((self.imgSize, self.imgSize))
-                    # Inserts the photo
                     self.training_data.append([np.array(image), labels[emotion]])
                     image.close()
                     if emotion == afraid:
@@ -84,6 +78,7 @@ class emotions:
                     pass
                     print(str(e))
 
+        # Randomly shuffles the data set so that the classes are not grouped together
         np.random.shuffle(self.training_data)
         print("Afraid:", self.afraid_count)
         print("Angry:", self.angry_count)
@@ -93,8 +88,23 @@ class emotions:
         print("Sad:", self.sad_count)
         print("Surprised:", self.surprised_count)
 
-    # Custom Transformations for our DataSet
-    def save(self, path, percent):
+
+    # save -> A function that goes through all the images in the processed image list into 3 groups(train, test, valid)
+    # and save them into new folders that are also sorted(exactly like original dataset folder)
+    # Params:
+    #   -Path     -> string input: path location of where the split datasets will be saved to
+    #   -percent  -> float input: The percentage of the dataset that will be used for training
+    def save(self, Path, percent):
+# ---------------------------------------- Detect input errors ----------------------------------------------------#
+        if (not path.exists(Path)) or (not isinstance(Path, str)):
+            raise Exception("Yikes! " + "[" + Path + "]" + " Path does not exist :(")
+        if (not isinstance(percent, float)) or percent > 1:
+            raise Exception("Invalid input for percentage, please check that ",
+                            percent,
+                            " is a decimal percentage thats less than 1")
+# -----------------------------------------------------------------------------------------------------------------#
+
+
         # creates the
         folders = ["train", "test", "validate"]
         emotion = ["afraid", "angry", "disgust", "happy", "neutral", "sad", "surprised"]
@@ -105,7 +115,7 @@ class emotions:
             os.mkdir(folderPath)
 
             for j in emotion:
-                os.mkdir(os.path.join(path, folders[i], j))
+                os.mkdir(os.path.join(Path, folders[i], j))
 
         # Loop through each emotion:
         sortedEmotion = [[], [], [], [], [], [], []]
@@ -133,74 +143,18 @@ class emotions:
                                   desc="Saving training data for \"" + emotion[index] + "\" class",
                                   total=len(trainSet)):
                 image = im.fromarray(trainX[0])
-                image.save(os.path.join(path, "train", emotion[index]) + "\\" + str(i) + ".JPEG")
+                image.save(os.path.join(Path, "train", emotion[index]) + "\\" + str(i) + ".JPEG")
 
             for i, validX in tqdm(enumerate(validSet),
                                   desc="Saving training data for \"" + emotion[index] + "\" class",
                                   total=len(trainSet)):
                 image = im.fromarray(validX[0])
-                image.save(os.path.join(path, "validate", emotion[index]) + "\\" + str(i) + ".JPEG")
+                image.save(os.path.join(Path, "validate", emotion[index]) + "\\" + str(i) + ".JPEG")
 
             for i, testX in tqdm(enumerate(testSet),
                                  desc="Saving training data for \"" + emotion[index] + "\" class",
                                  total=len(trainSet)):
                 image = im.fromarray(testX[0])
-                image.save(os.path.join(path, "test", emotion[index]) + "\\" + str(i) + ".JPEG")
+                image.save(os.path.join(Path, "test", emotion[index]) + "\\" + str(i) + ".JPEG")
 
             print('\nDone. Completed Saving Photos for ' + emotion[index])
-
-    # list of the flipped image
-    def RandomCropData(self, amount: int, width: int, height: int):
-        newTrainData = []
-
-        # Iterates through the training data and appends 'amount' images which are cropped images with 'width' and
-        # 'height' as the new dimensions of the images
-        for i in tqdm(range(len(self.training_data)), desc="Image Process: Randomly Cropping All Images "):  # 4900
-            crops = []
-            count = amount
-            while count > 0:
-                convertedImage = randomCrop(self.training_data[i][0], width, height)
-
-                if convertedImage not in crops:
-                    crops.append([convertedImage, self.training_data[i][1]])
-                else:
-                    count += 1
-
-                count -= 1
-            # print(len(crops))
-            for c in range(len(crops)):
-                newTrainData.append(crops[c])
-
-        print("\nFinished Processing: Array Length: " + str(len(newTrainData)))
-        self.training_data = newTrainData
-
-    # Image Flip -> This method allows the user to get all the PIL images and flip them and outputs them as a new
-    # list of the flipped image
-    def ImageFlip(self):
-        newTrainData = []
-
-        # Iterates through the training data and appends two images which are the flipped and non-flipped image to
-        # the new array
-        for i in tqdm(range(len(self.training_data)), desc="Image Process: Flipping All Images"):
-            convertedImage = transforms.hflip(self.training_data[i][0])
-
-            newTrainData.append([convertedImage, self.training_data[i][1]])
-            newTrainData.append([self.training_data[i][0], self.training_data[i][1]])
-
-        print("\nFinished Processing: Array Length: " + str(len(newTrainData)))
-
-        self.training_data = newTrainData
-
-    # TODO: Implement ChangeToTensor changes the list of PIL Images to a tensor
-
-    # ChangeToTensor -> This method allows you to change the PIL image format to
-    def OutputAsTensors(self, device):
-        np.random.shuffle(self.training_data)
-        X = []
-        y = []
-
-        for item in tqdm(self.training_data, desc="Converting to Tensor"):
-            X.append(np.array(item[0]))
-            y.append(item[1])
-
-        return X, y

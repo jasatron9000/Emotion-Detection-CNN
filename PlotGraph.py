@@ -4,6 +4,7 @@
 # to use the python library for drawing plots
 # ============================================================
 
+# Imports needed for the following code to work
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sn
@@ -44,10 +45,16 @@ class genLinePlot:
         self.ylabel = ylabel
 
 
-def plot_confusion_matrix(confusion_matrix, CNN_name: str, save=False, path=None, norm = None):
+# plot_confusion_matrix  -> This allows the user to draw up a confusion matrix after the numerical matrix is calculated
+# Params:
+#   -confusion_matrix    -> a 2d numpy array: that has all the tally of predicted and real results
+#   -CNN_name            -> string input: for title of the graph
+#   -path                -> string input: the path to the directory where users want to save the graph(if they choose)
+#   -norm                -> boolean input: the user can choose if they want to see the normalized values or not
+#   -colour_scheme       -> string input: select colour schemes from the seaborn selection
+def plot_confusion_matrix(confusion_matrix, CNN_name: str, path=None, norm = None, colour_scheme = "BuPu"):
     if norm is not None:
         confusion_matrix = np.transpose(confusion_matrix)
-
         for i in range(len(confusion_matrix)):
             row_sum = np.sum(confusion_matrix[i])
             for j in range(len(confusion_matrix[i])):
@@ -58,15 +65,14 @@ def plot_confusion_matrix(confusion_matrix, CNN_name: str, save=False, path=None
     df_cm = pd.DataFrame(confusion_matrix, names, names)
     plt.figure(figsize=(10, 7))
     sn.set(font_scale=1.4)  # for label size
-    sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}, cmap="BuPu")  # font size
+    sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}, cmap= colour_scheme)  # font size
     ax = plt.axes()
     ax.set_title(CNN_name + ' Emotion Confusion Matrix')
     plt.xlabel('Actual Emotion')
     plt.ylabel('Predicted Emotion')
 
-    if save:
+    if path is not None:
         plt.savefig(path + "/" + CNN_name + "-cm.png")
-
     plt.show()
 
 
@@ -86,6 +92,11 @@ def insertY(plotArray: genLinePlot, *ny):
             plotArray.x[i].append(len(plotArray.y[i]))
 
 
+# showPlot : Allows users to display the graphs (for loss and accuracy curve)
+# PARAMS:
+#   -*plots  -> *plots
+#   -path    -> string input: the path to the directory where users want to save the graph(if they choose)
+#   -name    -> string input: name of what the graph will be saved to
 def showPlot(*plots: genLinePlot, path=None, name="default_graph"):
     # create figure
     fig = plt.figure()
@@ -106,7 +117,6 @@ def showPlot(*plots: genLinePlot, path=None, name="default_graph"):
 
     if path is not None:
         plt.savefig(path + "/" + name + ".png")
-
     plt.show()
 
 
