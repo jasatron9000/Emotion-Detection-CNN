@@ -83,6 +83,15 @@ class CustomVGG13(nn.Module):
         )
 
     def forward(self, x):
+
+        # ========================================= Detect input errors ================================================
+        input_size = 64
+        num_channel = 1
+        if x.shape[1] != num_channel or x.shape[2] != input_size or x.shape[3] != input_size:
+            raise Exception("Input image does not have correct dimensions, "
+                            "please check [IMAGE_SIZE] is {} and image is in grayscale".format(input_size))
+        # ==============================================================================================================
+
         # Go through convolution layers
         x = self.features(x)
 
@@ -170,6 +179,15 @@ class CustomVGG13x96(nn.Module):
         )
 
     def forward(self, x):
+
+        # ========================================= Detect input errors ================================================
+        input_size = 96
+        num_channel = 1
+        if x.shape[1] != num_channel or x.shape[2] != input_size or x.shape[3] != input_size:
+            raise Exception("Input image does not have correct dimensions, "
+                            "please check [IMAGE_SIZE] is {} and image is in grayscale".format(input_size))
+        # ==============================================================================================================
+
         # Go through convolution layers
         x = self.features(x)
 

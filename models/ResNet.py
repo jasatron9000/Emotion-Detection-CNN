@@ -205,6 +205,21 @@ class ResNet(nn.Module):
         return nn.Sequential(*layer_blocks)
 
     def forward(self, x):
+
+        # ========================================= Detect input errors ================================================
+        num_channel = 1
+        if x.shape[1] != num_channel:
+            raise Exception("Input image does not have correct dimensions, please check image is in grayscale")
+        if self.small:
+            input_size = 48
+            if x.shape[2] > input_size or x.shape[3] > input_size:
+                print("WARNING: please check [IMAGE_SIZE] is around {} by {} for best performance".format(input_size, input_size))
+        else:
+            input_size = 197
+            if x.shape[2] < input_size or x.shape[3] < input_size:
+                print("WARNING: please check [IMAGE_SIZE] is around {} by {} for best performance".format(input_size, input_size))
+        # ==============================================================================================================
+
         # Going through initial layer BEFORE using the ResNet layers that are made up of Resnet blocks
         x = self.conv1(x)
         x = F.relu(self.BN1(x))
