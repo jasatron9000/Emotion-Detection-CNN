@@ -46,7 +46,7 @@ class NishNet(nn.Module):
         }
 
         # Define fully connected layers
-        self.fc1 = nn.Linear(115200, output_features * 2 * 2 * 2)
+        self.fc1 = nn.Linear(8192, output_features * 2 * 2 * 2)
         self.fc2 = nn.Linear(output_features * 2 * 2 * 2, output_features * 2 * 2)
         self.fc3 = nn.Linear(output_features * 2 * 2, output_features * 2)
         self.fc4 = nn.Linear(output_features * 2, num_classes)
@@ -82,3 +82,10 @@ class NishNet(nn.Module):
         x = self.fc4(x)
 
         return F.softmax(x, dim=1)
+
+def test():
+    net = NishNet()
+    y = net(torch.randn(4, 1, 64, 64))
+    print(y.size())
+
+test()

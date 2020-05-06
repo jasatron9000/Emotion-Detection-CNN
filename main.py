@@ -29,7 +29,7 @@ import ResNet3418 as RN
 # Constants
 EPOCHS = 100
 BATCH_SIZE = 64
-IMAGE_SIZE = 64
+IMAGE_SIZE = 32
 TRAIN_PERCENT = 0.7
 lr = 0.001
 
