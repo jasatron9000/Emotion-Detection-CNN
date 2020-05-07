@@ -20,37 +20,93 @@ sys.path.insert(1, 'models')
 # Imports needed for the following code to work
 import AlexNet as AN
 import SqueezeNet as SN
-import VGG16
-import ResNet3418 as RN
+import VGG16 as VGG
+import ResNet as RN
+import LeNet as LN
 
+models = {
+    1: AN,
+    2: SN,
+    3: VGG,
+    4: RN,
+    5: LN
+}
+
+ResNet = {
+    1: RN.ResNet50,
+    2: RN.ResNet101,
+    3: RN.ResNet152,
+    4: RN.ResNet34,
+    5: RN.ResNet18
+}
 
 # ===================================== Input user parameters =====================================
+print("Please select Architecture to use, enter a number to select the model: \n"
+      "1. AlexNet \n"
+      "2. SqeezeNet \n"
+      "3. VGG \n"
+      "4. ResNet \n"
+      "5. LeNet \n")
 
-# Constants
-EPOCHS = 100
-BATCH_SIZE = 64
-IMAGE_SIZE = 32
-TRAIN_PERCENT = 0.7
-lr = 0.001
+selected_model = int(input("Model: "))
+while not 1 <= selected_model < len(models):
+    print("Invalid input, please enter values between 1 and {}".format(len(models)))
+    selected_model = int(input("Model: "))
+selected_model = models[selected_model]
 
-# Process the images from scratch
-REBUILD_DATA = False
-DEVICE = None
+if selected_model == RN:
+    print("Please select specific ResNet Model: \n"
+          "1. ResNet50 \n"
+          "2. ResNet101 \n"
+          "3. ResNet152 \n"
+          "4. ResNet34 \n"
+          "5. ResNet18 \n")
+    selected_Resnet = int(input("Model: "))
+    while not 1 <= selected_Resnet < len(ResNet):
+        print("Invalid input, please enter values between 1 and {}".format(len(ResNet)))
+        selected_Resnet = int(input("Model: "))
+    selected_Resnet = models[selected_Resnet]
+
+    print("Use for images size < 48 x 48 px?")
+    small = input("(y/n)")
+    while small != "y" and small != "n":
+        print("Invalid input, please enter either 'y' or 'n' ")
+        small = input("(y/n)")
+    net = selected_ResNet(small)
+else:
+    net = selected_model
+
+print("Train model?")
+train = input("(y/n)")
+while train != "y" and train != "n":
+    print("Invalid input, please enter either 'y' or 'n' ")
+    train = input("(y/n)")
+
+print("Please input parameters: ")
+EPOCHS = int(input("Number of Epoch: "))
+BATCH_SIZE = int(input("Batch size: "))
+IMAGE_SIZE = int(input("Image size, please input a single integer as the image will be a square: "))
+TRAIN_PERCENT = float(input("TRAIN_PERCENT: "))
+lr = float(input("Learning rate: "))
 
 # Path locations on local device
-DATA_LOCATION = r"D:\2020\COMPSYS 302\picturs\original\sorted_emotion"  # FILE LOCATION OF THE DATA
-SAVE_LOCATION = r"D:\2020\COMPSYS 302\CNNs"
-MODEL_SAVE = r"D:\2020\COMPSYS 302\CNNs"
-MODEL_NAME = "ResNet18_ADAM_LR_0.001_64x64 DROPOUT "
+print("Please input the different paths needed to process images: ")
+DATA_LOCATION = str(input("Path to folder that contains all the sorted location folders: "))
+SAVE_LOCATION = str(input("Path to location to store the split data: "))
+MODEL_SAVE = str(input("Path to location where the trained model will be saved to: "))
+MODEL_NAME = str(input("Name of saved model: "))
 
-# Network selection + to train or not
-net = RN.ResNet18().to(DEVICE)
-Train = True
-
+# Process the images from scratch
+print("Rebuild Data?")
+REBUILD_DATA = input("(y/n)")
+while REBUILD_DATA != "y" and REBUILD_DATA != "n":
+    print("Invalid input, please enter either 'y' or 'n' ")
+    REBUILD_DATA = input("(y/n)")
 
 # =========================================== Starts the code ===========================================
 
 # Initialising the device to be used for making the CNN calculations
+DEVICE = None
 if torch.cuda.is_available():
     DEVICE = torch.device("cuda:0")
     DEVICE_STATUS = True
