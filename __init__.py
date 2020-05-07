@@ -8,11 +8,13 @@ from tqdm import tqdm
 
 
 # ========================================= KDEF DATASET ================================================
+# Ask user if they want to use the KDEF dataset or not
 use_KDEF = input("Use KDEF dataset? (y/n): ")
 
 # ========================================= Detect input errors ================================================
 if use_KDEF == "y":
-    # Replace the address with the source folder where the KDEF images are kept
+
+    # Input address to the address with the source folder where the KDEF images are kept
     src = input("Enter path to where FDEF is: ")
 
     if not os.path.exists(src):
@@ -20,7 +22,7 @@ if use_KDEF == "y":
 
     if not os.path.exists(src + "/KDEF_sorted"):
         os.mkdir(src + "/KDEF_sorted")
-    # ==============================================================================================================
+# ==============================================================================================================
 
     # Initializes the folders
     dst_afraid = src + "/KDEF_sorted/afraid"
@@ -31,24 +33,27 @@ if use_KDEF == "y":
     dst_sad = src + "/KDEF_sorted/sad"
     dst_surprised = src + "/KDEF_sorted/surprised"
 
+    # count for number of images that has be organised into the correct folder
     count = 0
 
+    # List of paths to the emotion folders
     sorted_folders = [dst_afraid, dst_angry, dst_disgust, dst_happy, dst_neutral, dst_sad, dst_surprised]
 
+    # Change the source path to where the images are held for the KDEF dataset
     src = src + "\KDEF_and_AKDEF\KDEF"
     os.chdir(src)
 
+    # Create folders if there aren't any in there already
     for i in sorted_folders:
         if not os.path.exists(i):
             os.mkdir(i)
         else:
             raise Exception("Directory {} already contains a folder {}".format(src, i))
 
+    # loop through all the pictures in the KDEF dataset and organise into the the correct folders based on image label
     for f in tqdm(os.listdir(), desc="Organising KDEF dataset"):
 
         fileName, fileExt = os.path.splitext(f)
-
-        # Replace the address with src
         os.chdir(src + "/" + fileName)
 
         for i in os.listdir():
@@ -77,8 +82,10 @@ if use_KDEF == "y":
                 print("please check the following for naming errors: {} and re-run".format(str(e)))
 elif use_KDEF == "n":
     pass
+# ========================================= Detect input errors ================================================
 else:
     raise Exception("{} Is not a valid answer, please use 'y' or 'n'".format(use_KDEF))
+# ==============================================================================================================
 
 
 # ========================================= FER DATASET ================================================
