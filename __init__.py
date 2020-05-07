@@ -3,11 +3,88 @@ import csv
 import numpy as np
 from PIL import Image as img
 import os
+import shutil
 from tqdm import tqdm
 
+
+# ========================================= KDEF DATASET ================================================
+use_KDEF = input("Use KDEF dataset? (y/n): ")
+
+# ========================================= Detect input errors ================================================
+if use_KDEF == "y":
+    # Replace the address with the source folder where the KDEF images are kept
+    src = input("Enter path to where FDEF is: ")
+
+    if not os.path.exists(src):
+        raise Exception("Directory {} does not exist".format(src))
+
+    if not os.path.exists(src + "/KDEF_sorted"):
+        os.mkdir(src + "/KDEF_sorted")
+    # ==============================================================================================================
+
+    # Initializes the folders
+    dst_afraid = src + "/KDEF_sorted/afraid"
+    dst_angry = src + "/KDEF_sorted/angry"
+    dst_disgust = src + "/KDEF_sorted/disgust"
+    dst_happy = src + "/KDEF_sorted/happy"
+    dst_neutral = src + "/KDEF_sorted/neutral"
+    dst_sad = src + "/KDEF_sorted/sad"
+    dst_surprised = src + "/KDEF_sorted/surprised"
+
+    count = 0
+
+    sorted_folders = [dst_afraid, dst_angry, dst_disgust, dst_happy, dst_neutral, dst_sad, dst_surprised]
+
+    src = src + "\KDEF_and_AKDEF\KDEF"
+    os.chdir(src)
+
+    for i in sorted_folders:
+        if not os.path.exists(i):
+            os.mkdir(i)
+        else:
+            raise Exception("Directory {} already contains a folder {}".format(src, i))
+
+    for f in tqdm(os.listdir(), desc="Organising KDEF dataset"):
+
+        fileName, fileExt = os.path.splitext(f)
+
+        # Replace the address with src
+        os.chdir(src + "/" + fileName)
+
+        for i in os.listdir():
+            try:
+                imgName, imgExt = os.path.splitext(i)
+                emotion = imgName[4] + imgName[5]
+
+                if (emotion == 'AF'):
+                    shutil.copy(src=src + "/" + f + "/" + i, dst=dst_afraid)
+                elif (emotion == 'AN'):
+                    shutil.copy(src=src + "/" + f + "/" + i, dst=dst_angry)
+                elif (emotion == 'DI'):
+                    shutil.copy(src=src + "/" + f + "/" + i, dst=dst_disgust)
+                elif (emotion == 'HA'):
+                    shutil.copy(src=src + "/" + f + "/" + i, dst=dst_happy)
+                elif (emotion == 'NE'):
+                    shutil.copy(src=src + "/" + f + "/" + i, dst=dst_neutral)
+                elif (emotion == 'SA'):
+                    shutil.copy(src=src + "/" + f + "/" + i, dst=dst_sad)
+                elif (emotion == 'SU'):
+                    shutil.copy(src=src + "/" + f + "/" + i, dst=dst_surprised)
+                else:
+                    count += 1
+            except Exception as e:
+                pass
+                print("please check the following for naming errors: {} and re-run".format(str(e)))
+elif use_KDEF == "n":
+    pass
+else:
+    raise Exception("{} Is not a valid answer, please use 'y' or 'n'".format(use_KDEF))
+
+
+# ========================================= FER DATASET ================================================
 file = open("train.csv", "r")
 emotion = ["angry", "disgust", "afraid", "happy",  "sad", "surprised", "neutral"]
-path = r"D:\Biggie Cheese\Desktop\Uni\302\CS302-Python-2020-Group25\data"
+path = r"D:\2020\COMPSYS 302\CNNs\FER"
 for j in emotion:
      os.mkdir(os.path.join(path, j))
 
