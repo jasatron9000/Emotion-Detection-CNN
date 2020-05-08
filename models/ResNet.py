@@ -114,7 +114,7 @@ class ResNet(nn.Module):
         # nn.functions were not used as ResNet uses specific parameters for pooling, therefore
         # the 2 different types(max and adaptive_avg is specifide here)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.avgpool = nn.AvgPool2d((8, 8))
 
         # Dropout layer that will freeze some nodes in the network as overfitting prevention
         self.do = nn.Dropout(p=0.5)
@@ -155,7 +155,7 @@ class ResNet(nn.Module):
             # The exact same structure as above but parameters are changed for a smaller input size
             self.in_channels = 16
 
-            self.conv1 = nn.Conv2d(1, 16, kernel_size=7, stride=2, padding=3)
+            self.conv1 = nn.Conv2d(1, 16, kernel_size=3, stride=1, padding=1)
             self.BN1 = nn.BatchNorm2d(16)
 
             self.resLayer1 = self.make_layer(block, layers[0], map_back_channels=16, stride=1)
@@ -223,7 +223,8 @@ class ResNet(nn.Module):
         # Going through initial layer BEFORE using the ResNet layers that are made up of Resnet blocks
         x = self.conv1(x)
         x = F.relu(self.BN1(x))
-        x = self.maxpool(x)
+        #x = self.maxpool(x)
+        #print(x.shape)
 
         # Going through the ResNet layers
         # Depending on user input, user can select to toggle between normal ResNet or a modified one for smaller
@@ -235,13 +236,20 @@ class ResNet(nn.Module):
             x = self.resLayer4(x)
         else:
             x = self.resLayer1(x)
+            #print(x.shape)
             x = self.resLayer2(x)
+            #print(x.shape)
             x = self.resLayer3(x)
+            #print(x.shape)
 
         # finally to a fully connected layer with 512 * blk_expansion connections
         x = self.avgpool(x)
-        x = x.reshape(x.shape[0], -1)
+        #print(x.shape)
+
+        x = x.reshape(x.shape[0], -1) # Flatten
+
         x = self.fc(x)
+
 
         return x
 
@@ -268,3 +276,12 @@ def ResNet34(small = False):
 def ResNet18(small = False):
     num_classes = 7
     return ResNet(basic_block, [2, 2, 2, 2], num_classes, small=small)
+
+def ResNet110(small = True):
+    num_classes = 7
+    return ResNet(basic_block, [18, 18, 18], num_classes, small=small)
+
+
+# test = ResNet110(True)
+# y = test(torch.randn(4, 1, 32, 32))
+# print(y.shape)
