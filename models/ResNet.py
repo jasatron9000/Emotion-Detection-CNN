@@ -163,6 +163,7 @@ class ResNet(nn.Module):
             self.resLayer3 = self.make_layer(block, layers[2], map_back_channels=64)
 
             self.fc = nn.Linear(64 * block.blk_expand, num_classes)
+            self.BN2 = nn.BatchNorm1d(7)
 
     def make_layer(self, block, num_blocks, map_back_channels, stride=2):
 
@@ -248,7 +249,9 @@ class ResNet(nn.Module):
 
         x = x.reshape(x.shape[0], -1) # Flatten
 
+
         x = self.fc(x)
+        x = F.relu(self.BN2(x))
 
 
         return x
