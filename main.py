@@ -33,11 +33,11 @@ models = {
 }
 
 ResNet = {
-    1: RN.ResNet50,
-    2: RN.ResNet101,
-    3: RN.ResNet152,
-    4: RN.ResNet34,
-    5: RN.ResNet18
+    1: RN.ResNet50(),
+    2: RN.ResNet101(),
+    3: RN.ResNet152(),
+    4: RN.ResNet34(),
+    5: RN.ResNet18()
 }
 
 # ===================================== Input user parameters =====================================
@@ -48,9 +48,13 @@ print("Please select Architecture to use, enter a number to select the model: \n
       "4. ResNet \n"
       "5. LeNet \n")
 
-selected_model = int(input("Model: "))
-while not 1 <= selected_model < len(models):
-    print("Invalid input, please enter values between 1 and {}".format(len(models)))
+selected_model = input("Model: ")
+while not selected_model.isdigit():
+    print("Invalid string input, please enter an integer value")
+    selected_model = input("Model: ")
+selected_model = int(selected_model)
+while not 1 <= selected_model <= len(models):
+    print("Invalid input, please enter value between 1 and {}".format(len(models)))
     selected_model = int(input("Model: "))
 selected_model = models[selected_model]
 
@@ -61,7 +65,11 @@ if selected_model == RN:
           "3. ResNet152 \n"
           "4. ResNet34 \n"
           "5. ResNet18 \n")
-    selected_Resnet = int(input("Model: "))
+    selected_Resnet = input("Model: ")
+    while not selected_Resnet.isdigit():
+        print("Invalid string input, please enter an integer value")
+        selected_Resnet = input("Model: ")
+    selected_Resnet = int(selected_Resnet)
     while not 1 <= selected_Resnet < len(ResNet):
         print("Invalid input, please enter values between 1 and {}".format(len(ResNet)))
         selected_Resnet = int(input("Model: "))
@@ -72,15 +80,15 @@ if selected_model == RN:
     while small != "y" and small != "n":
         print("Invalid input, please enter either 'y' or 'n' ")
         small = input("(y/n)")
-    net = selected_ResNet(small)
+    net = selected_Resnet(small)
 else:
     net = selected_model
 
 print("Train model?")
-train = input("(y/n)")
-while train != "y" and train != "n":
+Train = input("(y/n)")
+while Train != "y" and Train != "n":
     print("Invalid input, please enter either 'y' or 'n' ")
-    train = input("(y/n)")
+    Train = input("(y/n)")
 
 print("Please input parameters: ")
 EPOCHS = int(input("Number of Epoch: "))
