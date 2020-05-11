@@ -33,7 +33,7 @@ class emotions:
     #   -imgLocation -> string input: path location of where the sorted pictures are
     def make_training_data(self, imgLocation: str):
 # ---------------------------------------- Detect input errors ----------------------------------------------------#
-        if (not path.exists(imgLocation)) or (not isinstance(imgLocation, str)):
+        if (not os.path.exists(imgLocation)) or (not isinstance(imgLocation, str)):
             raise Exception("Yikes! " + "[" + imgLocation + "]" + " Path does not exist :(")
 # -----------------------------------------------------------------------------------------------------------------#
 

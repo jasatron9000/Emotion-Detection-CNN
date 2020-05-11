@@ -81,7 +81,7 @@ class NishNet(nn.Module):
         x = F.dropout(F.relu(self.fc3(x)), p=fc_dropout_p, training=True)
         x = self.fc4(x)
 
-        return F.softmax(x, dim=1)
+        return x
 
 def test():
     net = NishNet()

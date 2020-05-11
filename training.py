@@ -13,7 +13,7 @@ import torch.optim as optim
 import PlotGraph as plt
 from tqdm import tqdm
 import numpy as np
-
+import matplotlib.pyplot as plot
 
 
 def outputEmotions(listElement):
@@ -21,6 +21,7 @@ def outputEmotions(listElement):
 
     for i in range(len(names)):
         print("\t" + names[i] + ": " + str(listElement[i]))
+
 
 # trainer -> a class that holds necessary functions/dataset/parameters to train the model and save it to a local device
 # Params:
@@ -34,7 +35,7 @@ def outputEmotions(listElement):
 class trainer:
     def __init__(self, epoch: int, batch_size: int, net, trainSet, validSet, testSet, device, lr=0.005, weights=None):
 
-# ========================================= Detect input errors ======================================================
+        # ========================================= Detect input errors ======================================================
         integers = [epoch, batch_size]
         for i in integers:
             if not isinstance(i, int):
@@ -45,13 +46,13 @@ class trainer:
         for i in check_list:
             it = iter(i)
             image, label = next(it)
-            check.append(net(image))
+            check.append(net(image.to(device)))
         if check[0].shape == check[1].shape == check[2].shape:
             pass
         else:
             raise Exception("Datasets do not match with each other using current network, please check if:"
                             "[trainSet], [validSet], [testSet] match with each other for ", str(net))
-# =====================================================================================================================
+        # =====================================================================================================================
 
         self.net = net
         self.validSet = validSet
@@ -63,12 +64,17 @@ class trainer:
         self.epoch = epoch
 
         # Initialise the optimiser and the loss function that is being used
-        self.optimiser = optim.Adam(self.net.parameters(), lr=lr)
+        self.optimiser = optim.SGD(self.net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)
+        self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimiser, factor=0.01, verbose=True)
+
+        # self.optimiser = optim.SGD(self.net.parameters(), lr=0.1, momentum=0.9, weight_decay=0.0001)
+        # self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimiser, factor=0.01, verbose=True)
+        # self.scheduler = optim.lr_scheduler.StepLR(self.optimiser, step_size=20, gamma=0.01)
+
         if weights is not None:
             self.loss_func = nn.CrossEntropyLoss(weight=weights)
         else:
             self.loss_func = nn.CrossEntropyLoss()
-
 
         # Initialise the graphing classes that are being used
         self.pltLoss = plt.genLinePlot(title="Loss Analysis", ylabel="Loss", xlabel="Epoch", numOfLines=2,
@@ -190,7 +196,7 @@ class trainer:
                                                                       predicted_emotion, actual_emotion] + 1
         print(confusion_matrix)
 
-        plt.plot_confusion_matrix(confusion_matrix, name, save=True, path=path, norm=True)
+        plt.plot_confusion_matrix(confusion_matrix, name, path=path, norm=True)
 
         plt.showPlot(self.pltLoss, path=path, name=name + "-loss")
         plt.showPlot(self.pltAcc, path=path, name=name + "-acc")
@@ -198,9 +204,9 @@ class trainer:
         reshapedLoss = np.transpose(self.pltLoss.y)
         reshapedAcc = np.transpose(self.pltAcc.y)
 
+        np.savetxt(path + "/" + name + "-cm.csv", confusion_matrix, delimiter=',')
         np.savetxt(path + "/" + name + "-loss.csv", reshapedLoss, delimiter=',')
         np.savetxt(path + "/" + name + "-acc.csv", reshapedAcc, delimiter=',')
-
 
     # startTrain -> A function that trains network by looping through the specifide numbero of epochs and batchs
     # Params:
@@ -210,13 +216,13 @@ class trainer:
     #   -saveFreq  -> number of epochs to be iterated before triggering a save
     def startTrain(self, Path, fileName="default_model", load=False, saveFreq=20):
 
-# ========================================= Detect input errors ================================================
+        # ========================================= Detect input errors ================================================
         if (not path.exists(Path)) or (not isinstance(Path, str)):
             raise Exception("Yikes! " + "[" + Path + "]" + " Path does not exist :(")
 
         if not isinstance(fileName, str):
             raise Exception("Invalid type, please make sure [fileName] is a string type")
-# ==============================================================================================================
+        # ==============================================================================================================
 
         if load:
             self.loadCheckpoint(Path, fileName)
@@ -233,8 +239,8 @@ class trainer:
             for idx, trainingData in tqdm(enumerate(self.trainSet),
                                           desc="EPOCH " + str(e + 1) + "/" + str(self.epoch),
                                           total=len(self.trainSet)):
-
                 batchImage, batchLabel = trainingData
+
                 batchImage = batchImage.to(self.device)
                 batchLabel = batchLabel.to(self.device)
 
@@ -246,8 +252,11 @@ class trainer:
                 loss.backward()
                 self.optimiser.step()
 
-            trainLoss, trainAcc = self.trainingEval(5)
-            validLoss, validAcc = self.trainingEval(5, train=False)
+            trainLoss, trainAcc = self.trainingEval(10)
+            validLoss, validAcc = self.trainingEval(10, train=False)
+
+            self.scheduler.step(validLoss)
+            # self.scheduler.step()
 
             plt.insertY(self.pltLoss, trainLoss, validLoss)
             plt.insertY(self.pltAcc, trainAcc, validAcc)

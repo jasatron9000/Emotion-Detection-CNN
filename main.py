@@ -27,7 +27,7 @@ import LeNet as LN
 models = {
     1: AN,
     2: SN,
-    3: VGG,
+    3: VGG.CustomVGG13(),
     4: RN,
     5: LN
 }
@@ -37,8 +37,19 @@ ResNet = {
     2: RN.ResNet101(),
     3: RN.ResNet152(),
     4: RN.ResNet34(),
-    5: RN.ResNet18()
+    5: RN.ResNet18(),
+    6: RN.ResNet110()
 }
+# Initialising the device to be used for making the CNN calculations
+DEVICE = None
+if torch.cuda.is_available():
+    DEVICE = torch.device("cuda:0")
+    DEVICE_STATUS = True
+    print("\nUsing the GPU")
+else:
+    DEVICE = torch.device("cpu")
+    DEVICE_STATUS = False
+    print("\nUsing the CPU")
 
 # ===================================== Input user parameters =====================================
 print("Please select Architecture to use, enter a number to select the model: \n"
@@ -48,15 +59,15 @@ print("Please select Architecture to use, enter a number to select the model: \n
       "4. ResNet \n"
       "5. LeNet \n")
 
-selected_model = input("Model: ")
-while not selected_model.isdigit():
-    print("Invalid string input, please enter an integer value")
-    selected_model = input("Model: ")
-selected_model = int(selected_model)
-while not 1 <= selected_model <= len(models):
-    print("Invalid input, please enter value between 1 and {}".format(len(models)))
-    selected_model = int(input("Model: "))
-selected_model = models[selected_model]
+# selected_model = input("Model: ")
+# while not selected_model.isdigit():
+#     print("Invalid string input, please enter an integer value")
+#     selected_model = input("Model: ")
+# selected_model = int(selected_model)
+# while not 1 <= selected_model <= len(models):
+#     print("Invalid input, please enter value between 1 and {}".format(len(models)))
+#     selected_model = int(input("Model: "))
+# selected_model = models[selected_model]
 
 if selected_model == RN:
     print("Please select specific ResNet Model: \n"
@@ -64,7 +75,8 @@ if selected_model == RN:
           "2. ResNet101 \n"
           "3. ResNet152 \n"
           "4. ResNet34 \n"
-          "5. ResNet18 \n")
+          "5. ResNet18 \n"
+          "6. ResNet110 \n")
     selected_Resnet = input("Model: ")
     while not selected_Resnet.isdigit():
         print("Invalid string input, please enter an integer value")
@@ -73,22 +85,25 @@ if selected_model == RN:
     while not 1 <= selected_Resnet < len(ResNet):
         print("Invalid input, please enter values between 1 and {}".format(len(ResNet)))
         selected_Resnet = int(input("Model: "))
-    selected_Resnet = models[selected_Resnet]
+    selected_ResNet = ResNet[selected_Resnet]
+    print(selected_ResNet)
 
     print("Use for images size < 48 x 48 px?")
     small = input("(y/n)")
     while small != "y" and small != "n":
         print("Invalid input, please enter either 'y' or 'n' ")
         small = input("(y/n)")
-    net = selected_Resnet(small)
+    net = selected_ResNet.to(DEVICE)
 else:
-    net = selected_model
+    net = selected_model.to(DEVICE)
 
 print("Train model?")
-Train = input("(y/n)")
-while Train != "y" and Train != "n":
+train = input("(y/n)")
+while train != "y" and train != "n":
     print("Invalid input, please enter either 'y' or 'n' ")
-    Train = input("(y/n)")
+    train = input("(y/n)")
+
+Train = train == "y"
 
 print("Please input parameters: ")
 EPOCHS = int(input("Number of Epoch: "))
@@ -106,23 +121,16 @@ MODEL_NAME = str(input("Name of saved model: "))
 
 # Process the images from scratch
 print("Rebuild Data?")
-REBUILD_DATA = input("(y/n)")
-while REBUILD_DATA != "y" and REBUILD_DATA != "n":
+REBUILD_ANSWER = input("(y/n)")
+while REBUILD_ANSWER != "y" and REBUILD_ANSWER != "n":
     print("Invalid input, please enter either 'y' or 'n' ")
-    REBUILD_DATA = input("(y/n)")
+    REBUILD_ANSWER = input("(y/n)")
+
+REBUILD_DATA = REBUILD_ANSWER == "y"
 
 # =========================================== Starts the code ===========================================
 
-# Initialising the device to be used for making the CNN calculations
-DEVICE = None
-if torch.cuda.is_available():
-    DEVICE = torch.device("cuda:0")
-    DEVICE_STATUS = True
-    print("\nUsing the GPU")
-else:
-    DEVICE = torch.device("cpu")
-    DEVICE_STATUS = False
-    print("\nUsing the CPU")
+
 
 # Create the data and save
 if REBUILD_DATA:

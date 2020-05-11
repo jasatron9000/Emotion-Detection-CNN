@@ -208,17 +208,17 @@ class ResNet(nn.Module):
     def forward(self, x):
 
         # ========================================= Detect input errors ================================================
-        num_channel = 1
-        if x.shape[1] != num_channel:
-            raise Exception("Input image does not have correct dimensions, please check image is in grayscale")
-        if self.small:
-            input_size = 48
-            if x.shape[2] > input_size or x.shape[3] > input_size:
-                print("WARNING: please check [IMAGE_SIZE] is around {} by {} for best performance".format(input_size, input_size))
-        else:
-            input_size = 197
-            if x.shape[2] < input_size or x.shape[3] < input_size:
-                print("WARNING: please check [IMAGE_SIZE] is around {} by {} for best performance".format(input_size, input_size))
+        # num_channel = 1
+        # if x.shape[1] != num_channel:
+        #     raise Exception("Input image does not have correct dimensions, please check image is in grayscale")
+        # if self.small:
+        #     input_size = 64
+        #     if x.shape[2] > input_size or x.shape[3] > input_size:
+        #         print("WARNING: please check [IMAGE_SIZE] is around {} by {} for best performance".format(input_size, input_size))
+        # else:
+        #     input_size = 197
+        #     if x.shape[2] < input_size or x.shape[3] < input_size:
+        #         print("WARNING: please check [IMAGE_SIZE] is around {} by {} for best performance".format(input_size, input_size))
         # ==============================================================================================================
 
         # Going through initial layer BEFORE using the ResNet layers that are made up of Resnet blocks
@@ -280,11 +280,11 @@ def ResNet18(small = False):
     num_classes = 7
     return ResNet(basic_block, [2, 2, 2, 2], num_classes, small=small)
 
-def ResNet110(small = True):
+def ResNet56(small = True):
     num_classes = 7
-    return ResNet(basic_block, [18, 18, 18], num_classes, small=small)
+    return ResNet(basic_block, [9, 9, 9], num_classes, small=small)
 
 
-# test = ResNet110(True)
-# y = test(torch.randn(4, 1, 32, 32))
-# print(y.shape)
+#test = ResNet110()
+#y = test(torch.randn(4, 1, 32, 32))
+#print(y.shape)

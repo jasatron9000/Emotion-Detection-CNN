@@ -77,8 +77,7 @@ class CustomVGG13(nn.Module):
             nn.Dropout(p=0.5),
             nn.Linear(1024, 7),
             nn.BatchNorm1d(7),
-            nn.ReLU(),
-            nn.Dropout(p=0.5),
+            nn.ReLU()
 
         )
 
