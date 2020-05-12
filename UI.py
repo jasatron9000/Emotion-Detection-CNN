@@ -22,10 +22,9 @@ class userInput:
         # File names
         self.SAVE = False
         self.DATA_REBUILD = False
-        self.DATA_LOCATION = ""
-        self.LOAD_LOCATION = ""
-        self.SAVE_LOCATION = ""
-        self.MODEL_SAVE = ""
+        self.DATA_LOCATION = "data"
+        self.SAVE_LOCATION = "edited"
+        self.MODEL_SAVE = "saved"
         self.MODEL_NAME = ""
 
         # Hyper-Parameter Settings
@@ -244,11 +243,11 @@ class userInput:
                 +==============================================================+
                 \n""")
 
-            if self.DATA_REBUILD:
-                self.DATA_LOCATION = self.askDirectory("Path to folder that contains all the sorted location folders: ")
-                self.SAVE_LOCATION = self.askDirectory("Path to location to store the split data: ")
+            if len(os.listdir(self.SAVE_LOCATION)) == 0:
+                print("Folder still needs to be sorted")
+                self.DATA_REBUILD = True
             else:
-                self.SAVE_LOCATION = self.askDirectory("Path to location to store the split data: ")
+                print("Folder already sorted")
 
             self.MODEL_SAVE = self.askDirectory("Path to location where the trained model will be saved to: ")
             self.MODEL_NAME = str(input("Name of saved model: "))
@@ -272,15 +271,14 @@ class userInput:
                 +==============================================================+
                 \n""")
 
-            self.DATA_REBUILD = self.askYesNo("Do you want to split and rebuild the data? (y/n)")
-
-            if self.DATA_REBUILD:
-                self.DATA_LOCATION = self.askDirectory("Path to folder that contains all the sorted location folders: ")
-                self.SAVE_LOCATION = self.askDirectory("Path to location to store the split data: ")
+            #Check if the there is
+            if len(os.listdir(self.SAVE_LOCATION)) == 0:
+                print("Folder still needs to be sorted")
+                self.DATA_REBUILD = True
             else:
-                self.SAVE_LOCATION = self.askDirectory("Path to location to store the split data: ")
+                print("FOLDER ALREADY SORTED")
 
-            self.MODEL_SAVE = self.askDirectory("Path to location where the trained model will be saved to: ")
+            self.MODEL_SAVE = self.askDirectory("Path to the saved model:  ")
             self.MODEL_NAME = str(input("Name of saved model: "))
         else:
 
@@ -291,13 +289,11 @@ class userInput:
                 +==============================================================+
                 \n""")
 
-            self.DATA_REBUILD = self.askYesNo("Do you want to split and rebuild the data? (y/n)")
-
-            if self.DATA_REBUILD:
-                self.DATA_LOCATION = self.askDirectory("Path to folder that contains all the sorted location folders: ")
-                self.SAVE_LOCATION = self.askDirectory("Path to location to store the split data: ")
+            if len(os.listdir(self.SAVE_LOCATION)) == 0:
+                print("Folder still needs to be sorted")
+                self.DATA_REBUILD = True
             else:
-                self.SAVE_LOCATION = self.askDirectory("Path to location to store the split data: ")
+                print("FOLDER ALREADY SORTED")
 
-            self.MODEL_SAVE = self.askDirectory("Path to location where the trained model will be saved to: ")
+            self.MODEL_SAVE = self.askDirectory("Path to the saved model: ")
             self.MODEL_NAME = str(input("Name of saved model: "))

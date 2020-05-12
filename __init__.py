@@ -91,7 +91,12 @@ else:
 # ========================================= FER DATASET ================================================
 file = open("train.csv", "r")
 emotion = ["angry", "disgust", "afraid", "happy",  "sad", "surprised", "neutral"]
-path = r"D:\2020\COMPSYS 302\CNNs\FER"
+path = r"data"
+
+os.mkdir(path)
+os.mkdir(r"edited")
+os.mkdir(r"saved")
+
 for j in emotion:
      os.mkdir(os.path.join(path, j))
 
