@@ -7,8 +7,11 @@ import shutil
 from tqdm import tqdm
 
 # ========================================= CREATES ADDITIONAL FILES ===================================================
-os.mkdir(r"edited")
-os.mkdir(r"saved")
+if not os.path.exists(r"edited"):
+    os.mkdir(r"edited")
+
+if not os.path.exists(r"saved"):
+    os.mkdir(r"saved")
 # ================================================ KDEF DATASET ========================================================
 # Ask user if they want to use the KDEF dataset or not
 use_KDEF = input("Use KDEF dataset? (y/n): ")
@@ -17,22 +20,23 @@ use_KDEF = input("Use KDEF dataset? (y/n): ")
 if use_KDEF == "y":
 
     # Input address to the address with the source folder where the KDEF images are kept
-    src = input("Enter path to where FDEF is: ")
+    src = ""
 
     if not os.path.exists(src):
         raise Exception("Directory {} does not exist".format(src))
 
-    os.mkdir(r"data")
+    if not os.path.exists(src + "/data"):
+        os.mkdir(src + "/data")
 # ==============================================================================================================
 
     # Initializes the folders
-    dst_afraid = src + "/KDEF_sorted/afraid"
-    dst_angry = src + "/KDEF_sorted/angry"
-    dst_disgust = src + "/KDEF_sorted/disgust"
-    dst_happy = src + "/KDEF_sorted/happy"
-    dst_neutral = src + "/KDEF_sorted/neutral"
-    dst_sad = src + "/KDEF_sorted/sad"
-    dst_surprised = src + "/KDEF_sorted/surprised"
+    dst_afraid = src + "/data/afraid"
+    dst_angry = src + "/data/angry"
+    dst_disgust = src + "/data/disgust"
+    dst_happy = src + "/data/happy"
+    dst_neutral = src + "/data/neutral"
+    dst_sad = src + "/data/sad"
+    dst_surprised = src + "/data/surprised"
 
     # count for number of images that has be organised into the correct folder
     count = 0
