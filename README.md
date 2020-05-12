@@ -3,7 +3,6 @@
 ## Introduction
 
 ## Instructions
-=====
 
 ### Premilinary Steps
   1.  Download the [FER Dataset](https://www.kaggle.com/c/challenges-in-representation-learning-facial-expression-recognition-challenge/data) make sure to retrieve the train.csv file
