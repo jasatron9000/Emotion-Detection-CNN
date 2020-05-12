@@ -8,38 +8,10 @@
 import torch
 from image_processing import emotions
 from training import trainer
-import torch.utils.data as data
-from torchvision.datasets import ImageFolder
-from torchvision.transforms import transforms
-import sys
-sys.path.insert(1, 'models')
+from UI import userInput as user
 
 
 # ===================================== Import Architectures =====================================
-
-# Imports needed for the following code to work
-import AlexNet as AN
-import SqueezeNet as SN
-import VGG16 as VGG
-import ResNet as RN
-import LeNet as LN
-
-models = {
-    1: AN,
-    2: SN,
-    3: VGG.CustomVGG13(),
-    4: RN,
-    5: LN
-}
-
-ResNet = {
-    1: RN.ResNet50(),
-    2: RN.ResNet101(),
-    3: RN.ResNet152(),
-    4: RN.ResNet34(),
-    5: RN.ResNet18(),
-    6: RN.ResNet110()
-}
 # Initialising the device to be used for making the CNN calculations
 DEVICE = None
 if torch.cuda.is_available():
@@ -51,137 +23,120 @@ else:
     DEVICE_STATUS = False
     print("\nUsing the CPU")
 
+print(DEVICE)
+
 # ===================================== Input user parameters =====================================
-print("Please select Architecture to use, enter a number to select the model: \n"
-      "1. AlexNet \n"
-      "2. SqeezeNet \n"
-      "3. VGG \n"
-      "4. ResNet \n"
-      "5. LeNet \n")
+# print("Please select Architecture to use, enter a number to select the model: \n"
+#       "1. AlexNet \n"
+#       "2. SqeezeNet \n"
+#       "3. VGG \n"
+#       "4. ResNet \n"
+#       "5. LeNet \n")
+#
+# # selected_model = input("Model: ")
+# # while not selected_model.isdigit():
+# #     print("Invalid string input, please enter an integer value")
+# #     selected_model = input("Model: ")
+# # selected_model = int(selected_model)
+# # while not 1 <= selected_model <= len(models):
+# #     print("Invalid input, please enter value between 1 and {}".format(len(models)))
+# #     selected_model = int(input("Model: "))
+# # selected_model = models[selected_model]
+#
+# if selected_model == RN:
+#     print("Please select specific ResNet Model: \n"
+#           "1. ResNet50 \n"
+#           "2. ResNet101 \n"
+#           "3. ResNet152 \n"
+#           "4. ResNet34 \n"
+#           "5. ResNet18 \n"
+#           "6. ResNet110 \n")
+#     selected_Resnet = input("Model: ")
+#     while not selected_Resnet.isdigit():
+#         print("Invalid string input, please enter an integer value")
+#         selected_Resnet = input("Model: ")
+#     selected_Resnet = int(selected_Resnet)
+#     while not 1 <= selected_Resnet < len(ResNet):
+#         print("Invalid input, please enter values between 1 and {}".format(len(ResNet)))
+#         selected_Resnet = int(input("Model: "))
+#     selected_ResNet = ResNet[selected_Resnet]
+#     print(selected_ResNet)
+#
+#     print("Use for images size < 48 x 48 px?")
+#     small = input("(y/n)")
+#     while small != "y" and small != "n":
+#         print("Invalid input, please enter either 'y' or 'n' ")
+#         small = input("(y/n)")
+#     net = selected_ResNet.to(DEVICE)
+# else:
+#     net = selected_model.to(DEVICE)
+#
+# print("Train model?")
+# train = input("(y/n)")
+# while train != "y" and train != "n":
+#     print("Invalid input, please enter either 'y' or 'n' ")
+#     train = input("(y/n)")
+#
+# Train = train == "y"
+#
+# print("Please input parameters: ")
+# EPOCHS = int(input("Number of Epoch: "))
+# BATCH_SIZE = int(input("Batch size: "))
+# IMAGE_SIZE = int(input("Image size, please input a single integer as the image will be a square: "))
+# TRAIN_PERCENT = float(input("TRAIN_PERCENT: "))
+# lr = float(input("Learning rate: "))
+#
+# # Path locations on local device
+# print("Please input the different paths needed to process images: ")
+# DATA_LOCATION = str(input("Path to folder that contains all the sorted location folders: "))
+# SAVE_LOCATION = str(input("Path to location to store the split data: "))
+# MODEL_SAVE = str(input("Path to location where the trained model will be saved to: "))
+# MODEL_NAME = str(input("Name of saved model: "))
+#
+# # Process the images from scratch
+# print("Rebuild Data?")
+# REBUILD_ANSWER = input("(y/n)")
+# while REBUILD_ANSWER != "y" and REBUILD_ANSWER != "n":
+#     print("Invalid input, please enter either 'y' or 'n' ")
+#     REBUILD_ANSWER = input("(y/n)")
+#
+# REBUILD_DATA = REBUILD_ANSWER == "y"
 
-# selected_model = input("Model: ")
-# while not selected_model.isdigit():
-#     print("Invalid string input, please enter an integer value")
-#     selected_model = input("Model: ")
-# selected_model = int(selected_model)
-# while not 1 <= selected_model <= len(models):
-#     print("Invalid input, please enter value between 1 and {}".format(len(models)))
-#     selected_model = int(input("Model: "))
-# selected_model = models[selected_model]
 
-if selected_model == RN:
-    print("Please select specific ResNet Model: \n"
-          "1. ResNet50 \n"
-          "2. ResNet101 \n"
-          "3. ResNet152 \n"
-          "4. ResNet34 \n"
-          "5. ResNet18 \n"
-          "6. ResNet110 \n")
-    selected_Resnet = input("Model: ")
-    while not selected_Resnet.isdigit():
-        print("Invalid string input, please enter an integer value")
-        selected_Resnet = input("Model: ")
-    selected_Resnet = int(selected_Resnet)
-    while not 1 <= selected_Resnet < len(ResNet):
-        print("Invalid input, please enter values between 1 and {}".format(len(ResNet)))
-        selected_Resnet = int(input("Model: "))
-    selected_ResNet = ResNet[selected_Resnet]
-    print(selected_ResNet)
-
-    print("Use for images size < 48 x 48 px?")
-    small = input("(y/n)")
-    while small != "y" and small != "n":
-        print("Invalid input, please enter either 'y' or 'n' ")
-        small = input("(y/n)")
-    net = selected_ResNet.to(DEVICE)
-else:
-    net = selected_model.to(DEVICE)
-
-print("Train model?")
-train = input("(y/n)")
-while train != "y" and train != "n":
-    print("Invalid input, please enter either 'y' or 'n' ")
-    train = input("(y/n)")
-
-Train = train == "y"
-
-print("Please input parameters: ")
-EPOCHS = int(input("Number of Epoch: "))
-BATCH_SIZE = int(input("Batch size: "))
-IMAGE_SIZE = int(input("Image size, please input a single integer as the image will be a square: "))
-TRAIN_PERCENT = float(input("TRAIN_PERCENT: "))
-lr = float(input("Learning rate: "))
-
-# Path locations on local device
-print("Please input the different paths needed to process images: ")
-DATA_LOCATION = str(input("Path to folder that contains all the sorted location folders: "))
-SAVE_LOCATION = str(input("Path to location to store the split data: "))
-MODEL_SAVE = str(input("Path to location where the trained model will be saved to: "))
-MODEL_NAME = str(input("Name of saved model: "))
-
-# Process the images from scratch
-print("Rebuild Data?")
-REBUILD_ANSWER = input("(y/n)")
-while REBUILD_ANSWER != "y" and REBUILD_ANSWER != "n":
-    print("Invalid input, please enter either 'y' or 'n' ")
-    REBUILD_ANSWER = input("(y/n)")
-
-REBUILD_DATA = REBUILD_ANSWER == "y"
+uInt = user()
+uInt.initValues()
 
 # =========================================== Starts the code ===========================================
 
-
-
 # Create the data and save
-if REBUILD_DATA:
+if uInt.DATA_REBUILD:
     rawData = emotions()
-    rawData.make_training_data(DATA_LOCATION)
-    rawData.save(SAVE_LOCATION, TRAIN_PERCENT)
+    rawData.make_training_data(uInt.DATA_LOCATION)
+    rawData.save(uInt.SAVE_LOCATION, uInt.TRAIN_PERCENT)
 
-# Image augmentation is applied to the processed images
-transformAugmented = transforms.Compose([transforms.Resize(int(IMAGE_SIZE*1.1)),
-                                         transforms.RandomCrop(IMAGE_SIZE),
-                                         transforms.Grayscale(1),
-                                         transforms.RandomHorizontalFlip(),
-                                         transforms.RandomAffine(10),
-                                         transforms.ToTensor()])
 
-transform = transforms.Compose([transforms.Resize(IMAGE_SIZE),
-                                transforms.RandomAffine(10),
-                                transforms.RandomHorizontalFlip(),
-                                transforms.ToTensor()])
 
-# Initialize the datasets used for developing the CNN
-train = ImageFolder(SAVE_LOCATION + "\\train", transform=transformAugmented)
-valid = ImageFolder(SAVE_LOCATION + "\\validate", transform=transformAugmented)
-test = ImageFolder(SAVE_LOCATION + "\\test", transform=transformAugmented)
-print("\nIMAGES HAS BEEN RETRIEVED")
-
-# Initialize initial weights for network
-classWeights = torch.zeros((1, 7))
-for _, label in train:
-    classWeights[0][label] += 1
-
-for _, label in valid:
-    classWeights[0][label] += 1
-
-for _, label in test:
-    classWeights[0][label] += 1
-
-classWeights = 1/classWeights
-classWeights = classWeights.to(DEVICE)
-print(classWeights)
-
-# Load the processed images that are ready for calculation into the program
-trainSet = data.DataLoader(train, batch_size=BATCH_SIZE, shuffle=True)
-validSet = data.DataLoader(valid, batch_size=BATCH_SIZE, shuffle=True)
-testSet = data.DataLoader(test, batch_size=BATCH_SIZE, shuffle=True)
-print("\nIMAGES HAS BEEN LOADED IN THE PROGRAM")
+uInt.SELECTED_MODEL = uInt.SELECTED_MODEL.to(DEVICE)
 
 # Initialize the trainer with the necessary parameters
-trainBot = trainer(EPOCHS, BATCH_SIZE, net, trainSet, validSet, testSet, DEVICE, lr, weights=classWeights)
-if Train:
-    trainBot.startTrain(MODEL_SAVE, MODEL_NAME, load=False)
+if uInt.FUNCTION == 1:
+    trainBot = trainer(uInt.SELECTED_MODEL, DEVICE, uInt.SAVE_LOCATION,
+                       uInt.EPOCHS, uInt.BATCH_SIZE, uInt.LR, uInt.MOMENTUM, uInt.WEIGHT_DECAY, uInt.FACTOR,
+                       uInt.IMAGE_SIZE)
+    trainBot.startTrain(uInt.MODEL_SAVE, uInt.MODEL_NAME, load=False)
+
+elif uInt.FUNCTION == 2:
+    trainBot = trainer(uInt.SELECTED_MODEL, DEVICE, uInt.SAVE_LOCATION,
+                       uInt.EPOCHS, uInt.BATCH_SIZE, uInt.LR, uInt.MOMENTUM, uInt.WEIGHT_DECAY, uInt.FACTOR,
+                       uInt.IMAGE_SIZE, evalMode=True)
+    trainBot.loadCheckpoint(uInt.MODEL_SAVE, uInt.MODEL_NAME)
+    trainBot.startTrain(uInt.MODEL_SAVE, uInt.MODEL_NAME, load=False)
+
+elif uInt.FUNCTION == 3:
+    trainBot = trainer(uInt.SELECTED_MODEL, DEVICE, uInt.SAVE_LOCATION,
+                       uInt.EPOCHS, uInt.BATCH_SIZE, uInt.LR, uInt.MOMENTUM, uInt.WEIGHT_DECAY, uInt.FACTOR,
+                       uInt.IMAGE_SIZE, evalMode=True)
+    trainBot.loadCheckpoint(uInt.MODEL_SAVE, uInt.MODEL_NAME)
+    trainBot.evaluateModel(uInt.MODEL_SAVE, uInt.MODEL_NAME)
 else:
-    trainBot.loadCheckpoint(MODEL_SAVE, MODEL_NAME)
-    trainBot.evaluateModel(MODEL_SAVE, MODEL_NAME)
+    print("Bye")

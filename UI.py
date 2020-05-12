@@ -29,17 +29,18 @@ class userInput:
         self.MODEL_NAME = ""
 
         # Hyper-Parameter Settings
-        self.MOMENTUM = -1
-        self.WEIGHT_DECAY = -1
-        self.LR = -1
-        self.BATCH_SIZE = -1
-        self.EPOCHS = -1
+        self.MOMENTUM = 0.9
+        self.WEIGHT_DECAY = 0.0005
+        self.LR = 0.01
+        self.BATCH_SIZE = 64
+        self.EPOCHS = 100
         self.IMAGE_SIZE = -1
-        self.FACTOR = -1
+        self.FACTOR = 0.1
         self.TRAIN_PERCENT = 0.7
 
         # Model
         self.SELECTED_MODEL = None
+        self.FUNCTION = -1;
 
     # Function that deals with error handling with regards of choosing a range between x1 -> x2
     # Returns true or false
@@ -131,7 +132,10 @@ class userInput:
             directory = str(input(questionDirectory))
 
             if not os.path.exists(directory):
-                print("Invalid input, this directory does not exist\n")
+                if directory == "":
+                    print("Invalid input, must enter an input. Cannot save on same place as main.py\n")
+                else:
+                    print("Invalid input, this directory does not exist\n")
                 continue
             else:
                 return directory
@@ -143,6 +147,13 @@ class userInput:
             2: NN.NishNet(),
             3: VGG.CustomVGG13(),
             4: RN
+        }
+
+        imageSize = {
+            1: 32,
+            2: 64,
+            3: 64,
+            4: 64
         }
 
         ResNet = {
@@ -174,33 +185,37 @@ class userInput:
                                      "3. Evaluate pre-existing network \n"
                                      "\n"
                                      "CHOICE: ")
+        self.FUNCTION = choice
+        # Choose a network to
+        modelOption = self.askRange(1, len(models),
+                                    "Please select Architecture to use, enter a number to select the model: \n"
+                                    "1. LeNet-5 \n"
+                                    "2. VGG11 \n"
+                                    "3. VGG13 \n"
+                                    "4. ResNet \n"
+                                    "\n"
+                                    "MODEL: ", "MODEL: ")
+
+        self.SELECTED_MODEL = models[modelOption]
+
+        # Detect for ResNet
+        if self.SELECTED_MODEL == RN:
+            option_Resnet = self.askRange(1, len(models),
+                                          "Please select specific ResNet Model: \n"
+                                          "1. ResNet50 \n"
+                                          "2. ResNet101 \n"
+                                          "3. ResNet152 \n"
+                                          "4. ResNet34 \n"
+                                          "5. ResNet18 \n"
+                                          "6. ResNet110 \n"
+                                          "\n"
+                                          "ResNet: ", "ResNet: ")
+            self.SELECTED_MODEL = ResNet[option_Resnet]
+
+        self.IMAGE_SIZE = imageSize[modelOption]
+        print("Image Size is " + str(self.IMAGE_SIZE))
+
         if choice == 1:
-
-            # Choose a network to
-            modelOption = self.askRange(1, len(models),
-                                        "Please select Architecture to use, enter a number to select the model: \n"
-                                        "1. LeNet-5 \n"
-                                        "2. VGG11 \n"
-                                        "3. VGG13 \n"
-                                        "4. ResNet \n"
-                                        "\n"
-                                        "MODEL: ", "MODEL: ")
-
-            self.SELECTED_MODEL = models[modelOption]
-
-            # Detect for ResNet
-            if self.SELECTED_MODEL == RN:
-                option_Resnet = self.askRange(1, len(models),
-                                              "Please select specific ResNet Model: \n"
-                                              "1. ResNet50 \n"
-                                              "2. ResNet101 \n"
-                                              "3. ResNet152 \n"
-                                              "4. ResNet34 \n"
-                                              "5. ResNet18 \n"
-                                              "6. ResNet110 \n"
-                                              "\n"
-                                              "ResNet: ", "ResNet: ")
-                self.SELECTED_MODEL = ResNet[option_Resnet]
 
             print(
                 """\n
@@ -209,13 +224,14 @@ class userInput:
                 +==============================================================+
                 \n""")
 
-            self.EPOCHS = self.askDigit("Number of Epoch: ")
-            self.BATCH_SIZE = self.askDigit("Batch size: ")
-            self.IMAGE_SIZE = self.askDigit("Image size, please input a single integer as the image will be a square: ")
-            self.LR = self.askFloat("Learning rate: ")
-            self.MOMENTUM = self.askFloat("Momentum: ")
-            self.WEIGHT_DECAY = self.askFloat("Weight Decay: ")
-            self.FACTOR = self.askFloat("Factor: ")
+            if not self.askYesNo("Do you want to use the default values? "):
+                self.EPOCHS = self.askDigit("Number of Epoch: ")
+                self.BATCH_SIZE = self.askDigit("Batch size: ")
+                self.LR = self.askFloat("Learning rate: ")
+                self.MOMENTUM = self.askFloat("Momentum: ")
+                self.WEIGHT_DECAY = self.askFloat("Weight Decay: ")
+                self.FACTOR = self.askFloat("Factor: ")
+
 
             # ask for data rebuild
             print("")
@@ -238,6 +254,7 @@ class userInput:
             self.MODEL_NAME = str(input("Name of saved model: "))
 
         elif choice == 2:
+
             print(
                 """\n
                 +==============================================================+              
@@ -266,6 +283,7 @@ class userInput:
             self.MODEL_SAVE = self.askDirectory("Path to location where the trained model will be saved to: ")
             self.MODEL_NAME = str(input("Name of saved model: "))
         else:
+
             print(
                 """\n
                 +==============================================================+              
@@ -273,22 +291,13 @@ class userInput:
                 +==============================================================+
                 \n""")
 
+            self.DATA_REBUILD = self.askYesNo("Do you want to split and rebuild the data? (y/n)")
+
+            if self.DATA_REBUILD:
+                self.DATA_LOCATION = self.askDirectory("Path to folder that contains all the sorted location folders: ")
+                self.SAVE_LOCATION = self.askDirectory("Path to location to store the split data: ")
+            else:
+                self.SAVE_LOCATION = self.askDirectory("Path to location to store the split data: ")
+
             self.MODEL_SAVE = self.askDirectory("Path to location where the trained model will be saved to: ")
             self.MODEL_NAME = str(input("Name of saved model: "))
-
-        # ========================================================================#
-        # Then ask to choose a network to train
-        #   If Resnet is the user can choose a particular network
-        # If they want to train the network ask if they want to rebuild data (y/n)
-        # Ask for the hyper-parameters
-        #
-        # ========================================================================#
-        # If want to get an existing network ask for them to enter the fileLocation
-        # Keep asking until it that files exists
-        #
-        pass
-
-
-UI = userInput()
-
-UI.initValues()

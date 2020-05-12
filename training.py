@@ -13,8 +13,20 @@ import torch.optim as optim
 import PlotGraph as plt
 from tqdm import tqdm
 import numpy as np
+from torchvision.datasets import ImageFolder
+import torch.utils.data as data
+from torchvision.transforms import transforms
 import matplotlib.pyplot as plot
 
+sys.path.insert(1, 'models')
+# ===================================== Import Architectures =====================================
+
+# Imports needed for the following code to work
+import AlexNet as AN
+import NishNet as NN
+import VGG16 as VGG
+import ResNet as RN
+import LeNet as LN
 
 def outputEmotions(listElement):
     names = ["Afraid", "Angry", "Disgust", "Happy", "Neutral", "Sad", "Surprised"]
@@ -33,54 +45,100 @@ def outputEmotions(listElement):
 #   -testSet      -> list input: testing dataset that will be used for accuracy calculations and plot confusion matrix
 #   -device       -> Determines if the calculation will be done on the cpu or gpu in the local device
 class trainer:
-    def __init__(self, epoch: int, batch_size: int, net, trainSet, validSet, testSet, device, lr=0.005, weights=None):
+    def __init__(self, net, device, location, epoch: int, batch_size: int, lr, momentum, wd, factor, imageSize,
+                 weights=True, evalMode=False):
+        self.net = net
+        self.loss_func = None
+        self.location = location
 
-        # ========================================= Detect input errors ======================================================
+        self.batch_size = batch_size
+        self.totalEpoch = batch_size
+        self.epoch = epoch
+        self.image_size = imageSize
+
+        self.trainSet = None
+        self.validSet = None
+        self.testSet = None
+        self.weights = weights
+        self.evalMode = evalMode
+        self.device = device
+
+        print(self.device)
+        self.retrieveData(imageSize, self.location, self.batch_size)
+        # ========================================= Detect input errors ================================================
         integers = [epoch, batch_size]
         for i in integers:
             if not isinstance(i, int):
                 raise Exception("Invalid input, please check that [EPOCHS] and [BATCH_SIZE] are integers")
 
-        check_list = [trainSet, validSet, testSet]
+        check_list = [self.trainSet, self.validSet, self.testSet]
         check = []
         for i in check_list:
             it = iter(i)
             image, label = next(it)
-            check.append(net(image.to(device)))
+            image, label = image.to(self.device), label.to(self.device)
+            check.append(net(image))
         if check[0].shape == check[1].shape == check[2].shape:
             pass
         else:
             raise Exception("Datasets do not match with each other using current network, please check if:"
                             "[trainSet], [validSet], [testSet] match with each other for ", str(net))
-        # =====================================================================================================================
+        # ==============================================================================================================
 
-        self.net = net
-        self.validSet = validSet
-        self.trainSet = trainSet
-        self.testSet = testSet
-        self.device = device
-
-        self.batch_size = batch_size
-        self.epoch = epoch
+        # Reference for the save and load function
+        self.info = [lr, momentum, wd, factor]
 
         # Initialise the optimiser and the loss function that is being used
-        self.optimiser = optim.SGD(self.net.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0005)
-        self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimiser, factor=0.01, verbose=True)
-
-        # self.optimiser = optim.SGD(self.net.parameters(), lr=0.1, momentum=0.9, weight_decay=0.0001)
-        # self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimiser, factor=0.01, verbose=True)
-        # self.scheduler = optim.lr_scheduler.StepLR(self.optimiser, step_size=20, gamma=0.01)
-
-        if weights is not None:
-            self.loss_func = nn.CrossEntropyLoss(weight=weights)
-        else:
-            self.loss_func = nn.CrossEntropyLoss()
+        self.optimiser = optim.SGD(self.net.parameters(), lr=lr, momentum=momentum, weight_decay=wd)
+        self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimiser, factor=factor, verbose=True)
 
         # Initialise the graphing classes that are being used
         self.pltLoss = plt.genLinePlot(title="Loss Analysis", ylabel="Loss", xlabel="Epoch", numOfLines=2,
                                        legendList=["train", "test"])
         self.pltAcc = plt.genLinePlot(title="Accuracy Analysis", ylabel="Accuracy", xlabel="Epoch", numOfLines=2,
                                       legendList=["train", "test"])
+
+    def retrieveData(self, imageSize, location, batch_size):
+        # Image augmentation is applied to the processed images
+        transformAugmented = transforms.Compose([transforms.Resize(int(imageSize * 1.1)),
+                                                 transforms.RandomCrop(imageSize),
+                                                 transforms.Grayscale(1),
+                                                 transforms.RandomHorizontalFlip(),
+                                                 transforms.RandomAffine(10),
+                                                 transforms.ToTensor()])
+
+        train = ImageFolder(location + "\\train", transform=transformAugmented)
+        valid = ImageFolder(location + "\\validate", transform=transformAugmented)
+        test = ImageFolder(location + "\\test", transform=transformAugmented)
+        print("\nIMAGES HAS BEEN RETRIEVED")
+
+        # Find the loss function
+        if self.weights and not self.evalMode:
+            # Initialize initial weights for network
+            print("\nCalculating the weight adjustments for loss...")
+
+            classWeights = torch.zeros((1, 7))
+            for _, label in tqdm(train, desc="1/3"):
+                classWeights[0][label] += 1
+
+            for _, label in tqdm(valid, desc="2/3"):
+                classWeights[0][label] += 1
+
+            for _, label in tqdm(test, desc="3/3"):
+                classWeights[0][label] += 1
+
+            classWeights = 1 / classWeights
+            classWeights = classWeights.to(self.device)
+
+            self.loss_func = nn.CrossEntropyLoss(weight=classWeights)
+        else:
+            self.loss_func = nn.CrossEntropyLoss()
+
+        # Load the processed images that are ready for calculation into the program
+        self.trainSet = data.DataLoader(train, batch_size=batch_size, shuffle=True)
+        self.validSet = data.DataLoader(valid, batch_size=batch_size, shuffle=True)
+        self.testSet = data.DataLoader(test, batch_size=batch_size, shuffle=True)
+        print("\nIMAGES HAS BEEN LOADED IN THE PROGRAM")
 
     # trainingEval -> A function that calculates and returns the loss and accuracy at each epoch
     # Params:
@@ -278,12 +336,16 @@ class trainer:
     #   -fileName      -> string input: Location of where the results will be saved to
     def saveCheckpoint(self, fileName: str):
         checkpoint = {
-            "model_save": self.net.state_dict(),
+            "weights_save": self.net.state_dict(),
             "optimizer_save": self.optimiser.state_dict(),
-            "epoch_save": self.epoch,
+            "scheduler_save": self.scheduler.state_dict(),
+            "loss_save": self.loss_func.state_dict(),
+            "epoch_save": self.totalEpoch + self.epoch,
             "batchSize_save": self.batch_size,
             "graphData_save_Loss": [self.pltLoss.y, self.pltLoss.x],
-            "graphData_save_Acc": [self.pltAcc.y, self.pltAcc.x]
+            "graphData_save_Acc": [self.pltAcc.y, self.pltAcc.x],
+            "info": self.info,
+            "imageSize": self.image_size
         }
         torch.save(checkpoint, fileName)
 
@@ -294,13 +356,23 @@ class trainer:
     def loadCheckpoint(self, checkpoint_path: str, checkpoint_name: str):
         load_checkpoint = torch.load(checkpoint_path + "/" + checkpoint_name + ".pt")
 
-        self.net.load_state_dict(load_checkpoint["model_save"])
+        self.net.load_state_dict(load_checkpoint["weights_save"])
         self.optimiser.load_state_dict(load_checkpoint["optimizer_save"])
+        self.scheduler.load_state_dict(load_checkpoint["scheduler_save"])
+        self.totalEpoch = load_checkpoint["epoch_save"]
         self.pltLoss.x = load_checkpoint["graphData_save_Loss"][1]
         self.pltLoss.y = load_checkpoint["graphData_save_Loss"][0]
         self.pltAcc.x = load_checkpoint["graphData_save_Acc"][1]
         self.pltAcc.y = load_checkpoint["graphData_save_Acc"][0]
+        self.info = load_checkpoint["info"]
 
-        print("\nPREVIOUS DATA: ")
-        print("BATCH-SIZE = " + str(load_checkpoint["batchSize_save"]))
-        print("EPOCHS = " + str(load_checkpoint["epoch_save"]))
+        print("\nMODEL LOADED IN: ")
+        print("NAME: " + checkpoint_path + "/" + checkpoint_name + ".pt")
+        print("BATCH-SIZE: " + str(load_checkpoint["batchSize_save"]))
+        print("EPOCHS TRAINED: " + str(load_checkpoint["epoch_save"]))
+
+        print("\nHYPER-PARAMETER SETTINGS")
+        print("Learning Rate: " + str(self.info[0]))
+        print("Momentum: " + str(self.info[1]))
+        print("Weight Decay: " + str(self.info[1]))
+        print("Factor to Decrease by: " + str(self.info[1]) + "\n")
