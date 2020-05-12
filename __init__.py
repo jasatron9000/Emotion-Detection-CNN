@@ -9,8 +9,8 @@ from tqdm import tqdm
 
 # ========================================= KDEF DATASET ================================================
 # Ask user if they want to use the KDEF dataset or not
-use_KDEF = input("Use KDEF dataset? (y/n): ")
-
+#use_KDEF = input("Use KDEF dataset? (y/n): ")
+use_KDEF = "n"
 # ========================================= Detect input errors ================================================
 if use_KDEF == "y":
 

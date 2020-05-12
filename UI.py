@@ -6,15 +6,11 @@ sys.path.insert(1, 'models')
 # ===================================== Import Architectures =====================================
 
 # Imports needed for the following code to work
-import AlexNet as AN
+
 import NishNet as NN
 import VGG16 as VGG
 import ResNet as RN
 import LeNet as LN
-
-
-# class
-
 
 class userInput:
     def __init__(self):
@@ -66,7 +62,8 @@ class userInput:
             else:
                 return rng
 
-    # Function that deals with conflicting types
+    # Function that asks user for an integer where the negative is true when the program wants something greater than
+    # 0
     @staticmethod
     def askDigit(question: str, reply=None, negative=True):
         questionAsked = False
@@ -91,6 +88,7 @@ class userInput:
                 return dgt
 
     @staticmethod
+    # Checks if the user gave a float as an answer
     def askFloat(question: str, reply=None, negative=True):
         questionAsked = False
         if reply is None:
@@ -113,7 +111,7 @@ class userInput:
             else:
                 return dgt
 
-    # Function taht detects if the list of answers are outputed
+    # Function that detects asks the user yes or no and outputs true or false
     @staticmethod
     def askYesNo(question: str):
         answer = input(question)
@@ -124,21 +122,7 @@ class userInput:
 
         return answer == "y"
 
-    # Function that detects if a file exists
-    @staticmethod
-    def askDirectory(questionDirectory: str):
-        while True:
-            directory = str(input(questionDirectory))
-
-            if not os.path.exists(directory):
-                if directory == "":
-                    print("Invalid input, must enter an input. Cannot save on same place as main.py\n")
-                else:
-                    print("Invalid input, this directory does not exist\n")
-                continue
-            else:
-                return directory
-
+    # Function that asks user the necessary information to operate the program
     def initValues(self):
         # A
         models = {
@@ -177,7 +161,7 @@ class userInput:
 
             """
         )
-
+        #Asks the user to input which settings they want to do
         choice = self.askRange(1, 3, "Select which tasks you would like to choose: \n"
                                      "1. Train new network \n"
                                      "2. Train pre-existing network \n"
@@ -185,7 +169,7 @@ class userInput:
                                      "\n"
                                      "CHOICE: ")
         self.FUNCTION = choice
-        # Choose a network to
+        # Choose a network to start training on
         modelOption = self.askRange(1, len(models),
                                     "Please select Architecture to use, enter a number to select the model: \n"
                                     "1. LeNet-5 \n"
@@ -197,7 +181,7 @@ class userInput:
 
         self.SELECTED_MODEL = models[modelOption]
 
-        # Detect for ResNet
+        # More options for ResNet
         if self.SELECTED_MODEL == RN:
             option_Resnet = self.askRange(1, len(models),
                                           "Please select specific ResNet Model: \n"
@@ -211,6 +195,7 @@ class userInput:
                                           "ResNet: ", "ResNet: ")
             self.SELECTED_MODEL = ResNet[option_Resnet]
 
+        # Automatically deals with image size
         self.IMAGE_SIZE = imageSize[modelOption]
         print("Image Size is " + str(self.IMAGE_SIZE))
 
@@ -223,6 +208,7 @@ class userInput:
                 +==============================================================+
                 \n""")
 
+            # Hyper-Parameter settings
             if not self.askYesNo("Do you want to use the default values? "):
                 self.EPOCHS = self.askDigit("Number of Epoch: ")
                 self.BATCH_SIZE = self.askDigit("Batch size: ")
@@ -232,9 +218,8 @@ class userInput:
                 self.FACTOR = self.askFloat("Factor: ")
 
 
-            # ask for data rebuild
+
             print("")
-            self.DATA_REBUILD = self.askYesNo("Do you want to split and rebuild the data? (y/n)")
 
             print(
                 """\n
@@ -243,13 +228,14 @@ class userInput:
                 +==============================================================+
                 \n""")
 
+            # Splits the file to its training, validation and testing sets
             if len(os.listdir(self.SAVE_LOCATION)) == 0:
                 print("Folder still needs to be sorted")
                 self.DATA_REBUILD = True
             else:
                 print("Folder already sorted")
 
-            self.MODEL_SAVE = self.askDirectory("Path to location where the trained model will be saved to: ")
+            # Asks user for their model's name
             self.MODEL_NAME = str(input("Name of saved model: "))
 
         elif choice == 2:
@@ -271,14 +257,14 @@ class userInput:
                 +==============================================================+
                 \n""")
 
-            #Check if the there is
+            # Splits the file to its training, validation and testing sets
             if len(os.listdir(self.SAVE_LOCATION)) == 0:
                 print("Folder still needs to be sorted")
                 self.DATA_REBUILD = True
             else:
                 print("FOLDER ALREADY SORTED")
 
-            self.MODEL_SAVE = self.askDirectory("Path to the saved model:  ")
+            # Asks user for their model's name
             self.MODEL_NAME = str(input("Name of saved model: "))
         else:
 
@@ -289,11 +275,12 @@ class userInput:
                 +==============================================================+
                 \n""")
 
+            # Splits the file to its training, validation and testing sets
             if len(os.listdir(self.SAVE_LOCATION)) == 0:
                 print("Folder still needs to be sorted")
                 self.DATA_REBUILD = True
             else:
                 print("FOLDER ALREADY SORTED")
 
-            self.MODEL_SAVE = self.askDirectory("Path to the saved model: ")
+            # Asks user for their model's name
             self.MODEL_NAME = str(input("Name of saved model: "))

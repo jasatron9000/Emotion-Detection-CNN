@@ -111,7 +111,7 @@ class emotions:
 
         # make folder
         for i in range(len(folders)):
-            folderPath = os.path.join(path, folders[i])
+            folderPath = os.path.join(Path, folders[i])
             os.mkdir(folderPath)
 
             for j in emotion:
@@ -147,13 +147,13 @@ class emotions:
 
             for i, validX in tqdm(enumerate(validSet),
                                   desc="Saving training data for \"" + emotion[index] + "\" class",
-                                  total=len(trainSet)):
+                                  total=len(validSet)):
                 image = im.fromarray(validX[0])
                 image.save(os.path.join(Path, "validate", emotion[index]) + "\\" + str(i) + ".JPEG")
 
             for i, testX in tqdm(enumerate(testSet),
                                  desc="Saving training data for \"" + emotion[index] + "\" class",
-                                 total=len(trainSet)):
+                                 total=len(testSet)):
                 image = im.fromarray(testX[0])
                 image.save(os.path.join(Path, "test", emotion[index]) + "\\" + str(i) + ".JPEG")
 
