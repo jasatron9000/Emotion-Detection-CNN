@@ -6,11 +6,13 @@ import os
 import shutil
 from tqdm import tqdm
 
-
-# ========================================= KDEF DATASET ================================================
+# ========================================= CREATES ADDITIONAL FILES ===================================================
+os.mkdir(r"edited")
+os.mkdir(r"saved")
+# ================================================ KDEF DATASET ========================================================
 # Ask user if they want to use the KDEF dataset or not
-#use_KDEF = input("Use KDEF dataset? (y/n): ")
-use_KDEF = "n"
+use_KDEF = input("Use KDEF dataset? (y/n): ")
+
 # ========================================= Detect input errors ================================================
 if use_KDEF == "y":
 
@@ -20,8 +22,7 @@ if use_KDEF == "y":
     if not os.path.exists(src):
         raise Exception("Directory {} does not exist".format(src))
 
-    if not os.path.exists(src + "/KDEF_sorted"):
-        os.mkdir(src + "/KDEF_sorted")
+    os.mkdir(r"data")
 # ==============================================================================================================
 
     # Initializes the folders
@@ -89,47 +90,48 @@ else:
 
 
 # ========================================= FER DATASET ================================================
-file = open("train.csv", "r")
-emotion = ["angry", "disgust", "afraid", "happy",  "sad", "surprised", "neutral"]
-path = r"data"
+if use_KDEF == "n":
+    print("Using FER Dataset ")
 
-os.mkdir(path)
-os.mkdir(r"edited")
-os.mkdir(r"saved")
+    file = open("train.csv", "r")
+    emotion = ["angry", "disgust", "afraid", "happy",  "sad", "surprised", "neutral"]
+    path = r"data"
 
-for j in emotion:
-     os.mkdir(os.path.join(path, j))
+    os.mkdir(path)
 
-try:
-    csv_reader = csv.reader(file)
-    count = 0
-    for line in tqdm(csv_reader, desc="Converting CVS to PNG", total=28709):
-        if count != 0:
-            lengthCount = 0
-            imageMatrix = []
-            for w in range(48):
-                listRow = []
+    for j in emotion:
+         os.mkdir(os.path.join(path, j))
 
-                for h in range(48):
-                    s = ""
-                    while line[1][lengthCount] != ' ':
-                        s += line[1][lengthCount]
+    try:
+        csv_reader = csv.reader(file)
+        count = 0
+        for line in tqdm(csv_reader, desc="Converting CVS to PNG", total=28709):
+            if count != 0:
+                lengthCount = 0
+                imageMatrix = []
+                for w in range(48):
+                    listRow = []
+
+                    for h in range(48):
+                        s = ""
+                        while line[1][lengthCount] != ' ':
+                            s += line[1][lengthCount]
+                            lengthCount += 1
+
+                            if lengthCount == len(line[1]):
+                                break
+
                         lengthCount += 1
+                        listRow.append(int(s))
+                    imageMatrix.append(listRow)
 
-                        if lengthCount == len(line[1]):
-                            break
+                imageMatrix = np.uint8(imageMatrix)
+                image = img.fromarray(imageMatrix, 'L')
 
-                    lengthCount += 1
-                    listRow.append(int(s))
-                imageMatrix.append(listRow)
+                detectedPath = os.path.join(path, emotion[int(line[0])])
+                image.save(detectedPath + "/" + str(count) + ".png")
 
-            imageMatrix = np.uint8(imageMatrix)
-            image = img.fromarray(imageMatrix, 'L')
+            count += 1
 
-            detectedPath = os.path.join(path, emotion[int(line[0])])
-            image.save(detectedPath + "/" + str(count) + ".png")
-
-        count += 1
-
-finally:
-    file.close()
+    finally:
+        file.close()
